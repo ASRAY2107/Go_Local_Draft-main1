@@ -956,12 +956,3 @@ console.log(providers);
 };
 
 export default AdminDashboard;
-
-export type Users = {
-  username: string;
-  password: string;
-  role: string;
-  isDeleted: boolean;
-};
-
-const [users, setUsers] = useState<Users[]>([]);
