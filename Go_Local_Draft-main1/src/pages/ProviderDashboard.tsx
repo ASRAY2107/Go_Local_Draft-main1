@@ -21,155 +21,215 @@ import {
   Briefcase,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { Provider } from "./AdminDashboard";
+import axios from "axios";
+import Services from "./Services";
 
 const ProviderDashboard: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
 
-  const stats = [
-    {
-      icon: DollarSign,
-      label: "Total Earnings",
-      value: "₹45,230",
-      change: "+12%",
-      color: "text-green-600",
-      bg: "bg-green-100",
-    },
-    {
-      icon: Users,
-      label: "Total Customers",
-      value: "127",
-      change: "+8%",
-      color: "text-blue-600",
-      bg: "bg-blue-100",
-    },
-    {
-      icon: CheckCircle,
-      label: "Completed Jobs",
-      value: "89",
-      change: "+15%",
-      color: "text-purple-600",
-      bg: "bg-purple-100",
-    },
-    {
-      icon: Star,
-      label: "Average Rating",
-      value: "4.8",
-      change: "+0.2",
-      color: "text-yellow-600",
-      bg: "bg-yellow-100",
-    },
-  ];
+  const[provider,setProvider] = useState<Provider | undefined>(undefined)
+  const[username , setUsername] = useState<string | undefined>(undefined);
 
-  const recentJobs = [
-    {
-      id: 1,
-      customer: "Sarah Johnson",
-      service: "Interior Painting",
-      date: "2024-01-15",
-      status: "completed",
-      amount: "₹2,500",
-      rating: 5,
-      image:
-        "https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-    {
-      id: 2,
-      customer: "Michael Chen",
-      service: "Exterior Painting",
-      date: "2024-01-12",
-      status: "in-progress",
-      amount: "₹3,200",
-      rating: null,
-      image:
-        "https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-    {
-      id: 3,
-      customer: "Emily Davis",
-      service: "Wall Texturing",
-      date: "2024-01-10",
-      status: "pending",
-      amount: "₹1,800",
-      rating: null,
-      image:
-        "https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-  ];
+  // const stats = [
+  //   {
+  //     icon: DollarSign,
+  //     label: "Total Earnings",
+  //     value: "₹45,230",
+  //     change: "+12%",
+  //     color: "text-green-600",
+  //     bg: "bg-green-100",
+  //   },
+  //   {
+  //     icon: Users,
+  //     label: "Total Customers",
+  //     value: "127",
+  //     change: "+8%",
+  //     color: "text-blue-600",
+  //     bg: "bg-blue-100",
+  //   },
+  //   {
+  //     icon: CheckCircle,
+  //     label: "Completed Jobs",
+  //     value: "89",
+  //     change: "+15%",
+  //     color: "text-purple-600",
+  //     bg: "bg-purple-100",
+  //   },
+  //   {
+  //     icon: Star,
+  //     label: "Average Rating",
+  //     value: "4.8",
+  //     change: "+0.2",
+  //     color: "text-yellow-600",
+  //     bg: "bg-yellow-100",
+  //   },
+  // ];
 
-  const upcomingJobs = [
-    {
-      id: 1,
-      customer: "John Doe",
-      service: "Home Painting",
-      date: "2024-01-22",
-      time: "10:00 AM",
-      amount: "₹2,800",
-      address: "123 Main St, Chennai",
-      phone: "+91 9876543210",
-    },
-    {
-      id: 2,
-      customer: "Jane Smith",
-      service: "Office Painting",
-      date: "2024-01-24",
-      time: "2:00 PM",
-      amount: "₹4,500",
-      address: "456 Business Ave, Chennai",
-      phone: "+91 9876543211",
-    },
-  ];
+  // const recentJobs = [
+  //   {
+  //     id: 1,
+  //     customer: "Sarah Johnson",
+  //     service: "Interior Painting",
+  //     date: "2024-01-15",
+  //     status: "completed",
+  //     amount: "₹2,500",
+  //     rating: 5,
+  //     image:
+  //       "https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=400",
+  //   },
+  //   {
+  //     id: 2,
+  //     customer: "Michael Chen",
+  //     service: "Exterior Painting",
+  //     date: "2024-01-12",
+  //     status: "in-progress",
+  //     amount: "₹3,200",
+  //     rating: null,
+  //     image:
+  //       "https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=400",
+  //   },
+  //   {
+  //     id: 3,
+  //     customer: "Emily Davis",
+  //     service: "Wall Texturing",
+  //     date: "2024-01-10",
+  //     status: "pending",
+  //     amount: "₹1,800",
+  //     rating: null,
+  //     image:
+  //       "https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=400",
+  //   },
+  // ];
 
-  const notifications = [
-    {
-      id: 1,
-      type: "booking",
-      message: "New booking request from John Doe",
-      time: "2 hours ago",
-      unread: true,
-    },
-    {
-      id: 2,
-      type: "review",
-      message: "Sarah Johnson left a 5-star review",
-      time: "1 day ago",
-      unread: true,
-    },
-    {
-      id: 3,
-      type: "payment",
-      message: "Payment of ₹2,500 received",
-      time: "2 days ago",
-      unread: false,
-    },
-  ];
+  // const upcomingJobs = [
+  //   {
+  //     id: 1,
+  //     customer: "John Doe",
+  //     service: "Home Painting",
+  //     date: "2024-01-22",
+  //     time: "10:00 AM",
+  //     amount: "₹2,800",
+  //     address: "123 Main St, Chennai",
+  //     phone: "+91 9876543210",
+  //   },
+  //   {
+  //     id: 2,
+  //     customer: "Jane Smith",
+  //     service: "Office Painting",
+  //     date: "2024-01-24",
+  //     time: "2:00 PM",
+  //     amount: "₹4,500",
+  //     address: "456 Business Ave, Chennai",
+  //     phone: "+91 9876543211",
+  //   },
+  // ];
 
-  const services = [
-    {
-      id: 1,
-      name: "Interior Painting",
-      category: "Painting",
-      price: "₹500/hour",
-      status: "active",
-      bookings: 45,
-    },
-    {
-      id: 2,
-      name: "Exterior Painting",
-      category: "Painting",
-      price: "₹600/hour",
-      status: "active",
-      bookings: 32,
-    },
-    {
-      id: 3,
-      name: "Wall Texturing",
-      category: "Painting",
-      price: "₹400/hour",
-      status: "paused",
-      bookings: 12,
-    },
-  ];
+  // const notifications = [
+  //   {
+  //     id: 1,
+  //     type: "booking",
+  //     message: "New booking request from John Doe",
+  //     time: "2 hours ago",
+  //     unread: true,
+  //   },
+  //   {
+  //     id: 2,
+  //     type: "review",
+  //     message: "Sarah Johnson left a 5-star review",
+  //     time: "1 day ago",
+  //     unread: true,
+  //   },
+  //   {
+  //     id: 3,
+  //     type: "payment",
+  //     message: "Payment of ₹2,500 received",
+  //     time: "2 days ago",
+  //     unread: false,
+  //   },
+  // ];
+
+  // const services = [
+  //   {
+  //     id: 1,
+  //     name: "Interior Painting",
+  //     category: "Painting",
+  //     price: "₹500/hour",
+  //     status: "active",
+  //     bookings: 45,
+  //   },
+  //   {
+  //     id: 2,
+  //     name: "Exterior Painting",
+  //     category: "Painting",
+  //     price: "₹600/hour",
+  //     status: "active",
+  //     bookings: 32,
+  //   },
+  //   {
+  //     id: 3,
+  //     name: "Wall Texturing",
+  //     category: "Painting",
+  //     price: "₹400/hour",
+  //     status: "paused",
+  //     bookings: 12,
+  //   },
+  // ];
+
+  useEffect(() => {
+    if(!username) return;
+    // Define the async function INSIDE the effect
+    const fetchUsers = async () => {
+
+      try {
+        const res = await axios.get(
+          'http://localhost:8080/api/auth/me',
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        console.log(res.data);
+        setUsername(res.data.username);
+      } catch (err) {
+        // Handle error (show error message, etc.)
+        console.error(err);
+      }
+    };
+
+    fetchUsers(); // Call the async function
+  },[]);
+
+
+  useEffect(() => {
+    // Define the async function INSIDE the effect
+    const fetchProvider = async () => {
+      try {
+        const res = await axios.get<Provider>(
+          `http://localhost:8080/api/provider/get-profile/${username}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        console.log(res.data.username);
+        setProvider(res.data);
+      } catch (err) {
+        // Handle error (show error message, etc.)
+        console.error(err);
+      }
+    };
+
+    fetchProvider(); // Call the async function
+  },[]);
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -196,10 +256,10 @@ const ProviderDashboard: React.FC = () => {
           <div className="flex items-center space-x-4 mb-4">
             <img
               src={
-                user?.avatar ||
+                `${provider?.profilePicture}?byte64` ||
                 "https://images.pexels.com/photos/5025639/pexels-photo-5025639.jpeg?auto=compress&cs=tinysrgb&w=150"
               }
-              alt={user?.name}
+              alt={provider?.providerName || ""}
               className="w-16 h-16 rounded-full object-cover"
             />
             <div>
@@ -213,7 +273,7 @@ const ProviderDashboard: React.FC = () => {
                 <div className="flex items-center space-x-1">
                   <Star className="h-4 w-4 text-yellow-400 fill-current" />
                   <span className="text-sm font-medium">
-                    {user?.rating} rating
+                    {provider?.rating} rating
                   </span>
                 </div>
                 <div className="flex items-center space-x-1">
@@ -611,7 +671,7 @@ const ProviderDashboard: React.FC = () => {
                       </label>
                       <input
                         type="text"
-                        defaultValue={user?.name}
+                        defaultValue={provider?.name}
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
@@ -621,7 +681,7 @@ const ProviderDashboard: React.FC = () => {
                       </label>
                       <input
                         type="email"
-                        defaultValue={user?.email}
+                        defaultValue={provider?.email}
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
@@ -793,3 +853,7 @@ const ProviderDashboard: React.FC = () => {
 };
 
 export default ProviderDashboard;
+function useEffect(arg0: () => void, arg1: never[]) {
+  throw new Error("Function not implemented.");
+}
+

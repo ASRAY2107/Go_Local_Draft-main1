@@ -9,12 +9,12 @@ import axios from "axios";
 import { Users } from "../pages/AdminDashboard";
 
 interface AuthContextType {
-  user: Users | null;
+   user: Users | null;
   login: (username: string, password: string) => Promise<boolean>;
   logouts :() => Promise<boolean>;
   isAuthenticated: boolean;
   loading: boolean;
-  setUser: React.Dispatch<React.SetStateAction<Users | null>>
+  setUser: React.Dispatch<React.SetStateAction<Users| null>>
   register({name, phone, location, role, serviceCategory, description} : any, password: string) : Promise<boolean>;
 }
 

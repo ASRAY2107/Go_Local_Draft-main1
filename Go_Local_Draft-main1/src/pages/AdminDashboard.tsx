@@ -28,16 +28,35 @@ export type Users = {
   role: string;
   isDeleted: boolean;
 };
+export  type Services = {
+  serviceId :string,
+  serviceName :string,
+  noOfUser :number
 
+}
 
-
+export type Provider = {
+  username:String,
+  providerName :String,
+  location :String,
+  mobileNumber : BigInt,
+  email:String,
+  rating:String,
+  profilePicture: Uint8Array ,
+  noOfBookings:number,
+  service: Services,
+  experience: number
+  description: Uint8Array,
+  noOfTimesBooked: number
+}
 
 
 
 const AdminDashboard: React.FC = () => {
-   const { user } = useAuth();
+  //  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
-  const [userss, setUserss] = useState<Users[]>([]);
+  const [userss, setUserss] = useState<Users | undefined>();
+  const [username, setUsername] = useState<string | undefined>();
 
   const stats = [
     {
@@ -75,38 +94,20 @@ const AdminDashboard: React.FC = () => {
   ];
 
 
-
+  type Users = {
+    username: string;
+    password: string;
+    role: string;
+    isDeleted: boolean;
+  };
  
-
-
-  // const CustomersUsers = async () => {
-  //   const Cusres = await axios.get("http://localhost:8080/api/admin/get-customers", {
-  //     headers: {
-  //       Authorization: `Bearer ${localStorage.getItem("token")}`,
-  //       'Content-Type': 'application/json'
-  //     }
-  //   })
-
-  //   return Cusres.data;
-  // }
-
-
-  // const customers = async() =>{
-  //   const customer_list = await axios("http://localhost:8080/api/admin/get-customers") ,{
-  //     headers:{
-  //       Authorization :`Bearer ${loacalStorage.getItem("token")}`,
-  //       'Content-Type' : 'application/json'
-  //     }
-  //   }
-  //   return;
-  // })
 
   useEffect(() => {
     // Define the async function INSIDE the effect
     const fetchUsers = async () => {
       try {
-        const res = await axios.get<Users[]>(
-          'http://localhost:8080/api/admin/get-users',
+        const res = await axios.get(
+          'http://localhost:8080/api/auth/me',
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -115,8 +116,8 @@ const AdminDashboard: React.FC = () => {
           }
         );
 
-        console.log(res);
-        setUserss(res.data);
+        console.log(res.data);
+        setUsername(res.data);
       } catch (err) {
         // Handle error (show error message, etc.)
         console.error(err);
@@ -129,7 +130,7 @@ const AdminDashboard: React.FC = () => {
   // console.log(users);
 
   type Customer = {
-    username:String,
+    // username:String,
     customerName :String,
     location :String,
     mobileNumber : BigInt,
@@ -168,28 +169,28 @@ const AdminDashboard: React.FC = () => {
 
   console.log(customers);
 
-  type Services = {
-    serviceId :string,
-    serviceName :string,
-    noOfUser :number
+//   type Services = {
+//     serviceId :string,
+//     serviceName :string,
+//     noOfUser :number
 
-  }
+//   }
 
 
-type Provider = {
-    username:String,
-    providerName :String,
-    location :String,
-    mobileNumber : BigInt,
-    email:String,
-    rating:String,
-    profilePicture: Uint8Array ,
-    noOfBookings:number,
-    service: Services,
-    experience: number
-    description: Uint8Array,
-    noOfTimesBooked: number
-}
+// type Provider = {
+//     username:String,
+//     providerName :String,
+//     location :String,
+//     mobileNumber : BigInt,
+//     email:String,
+//     rating:String,
+//     profilePicture: Uint8Array ,
+//     noOfBookings:number,
+//     service: Services,
+//     experience: number
+//     description: Uint8Array,
+//     noOfTimesBooked: number
+// }
 const[providers , setProvider] = useState<Provider[]>([]);
 
 useEffect(() => {
@@ -223,73 +224,8 @@ console.log(providers);
   const [loading, setLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState("All Roles");
 
-  // useEffect(() => {
-  //   const fetchUsersRole = async () => {
-  //     setLoading(true);
-  //     try {
-  //       let url = "http://localhost:8080/api/admin/get-user";
-  //       if (selectedRole !== "All Roles") {
-  //         // If your API expects role as a query parameter, adjust as needed
-  //         url += `?role=${selectedRole.toLowerCase()}`;
-  //       }
-  //       const res = await axios.get(url, {
-  //         headers: {
-  //           Authorization: `Bearer ${localStorage.getItem("token")}`,
-  //           "Content-Type": "application/json",
-  //         },
-  //       });
-  //       setUsers(res.data);
-  //     } catch (err) {
-  //       setUsers([]);
-  //       console.error(err);
-  //     }
-  //     setLoading(false);
-  //   };
-
-  //   fetchUsersRole();
-  // }, [selectedRole]);
 
 
-
-
-  // const users = [
-  //   {
-  //     id: "1",
-  //     name: "John Customer",
-  //     email: "john@example.com",
-  //     role: "customer",
-  //     status: "active",
-  //     joinDate: "2024-01-15",
-  //     totalBookings: 12,
-  //     avatar:
-  //       "https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=150",
-  //   },
-  //   {
-  //     id: "2",
-  //     name: "Sarah Provider",
-  //     email: "sarah@example.com",
-  //     role: "provider",
-  //     status: "active",
-  //     joinDate: "2024-01-10",
-  //     totalBookings: 89,
-  //     rating: 4.8,
-  //     avatar:
-  //       "https://images.pexels.com/photos/5025639/pexels-photo-5025639.jpeg?auto=compress&cs=tinysrgb&w=150",
-  //   },
-  //   {
-  //     id: "3",
-  //     name: "Mike Wilson",
-  //     email: "mike@example.com",
-  //     role: "provider",
-  //     status: "pending",
-  //     joinDate: "2024-01-20",
-  //     totalBookings: 0,
-  //     avatar:
-  //       "https://images.pexels.com/photos/3184454/pexels-photo-3184454.jpeg?auto=compress&cs=tinysrgb&w=150",
-  //   },
-  // ];
-
-  // const users = await axios.get("http://localhost:8080/api/admin/get-users");
 
   const services = [
     {
@@ -413,7 +349,7 @@ console.log(providers);
               </h1>
               <p className="text-gray-600">
 
-                Welcome back, {user?.username} Manage your platform efficiently
+                Welcome back, {username} Manage your platform efficiently
               </p>
               <div className="flex items-center space-x-4 mt-2">
                 <div className="flex items-center space-x-1">
@@ -573,20 +509,7 @@ console.log(providers);
                         All Customers
                       </p>
                     </button>
-                    {/* <button
-                      onClick={() => setActiveTab("reports")}
-                      className="bg-white p-4 rounded-lg hover:shadow-md transition-shadow text-center"
-                    >
-                      <AlertTriangle className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
-                      <p className="font-medium text-gray-900">View Reports</p>
-                    </button>
-                    <button
-                      onClick={() => setActiveTab("analytics")}
-                      className="bg-white p-4 rounded-lg hover:shadow-md transition-shadow text-center"
-                    >
-                      <BarChart3 className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                      <p className="font-medium text-gray-900">Analytics</p>
-                    </button> */}
+                 
                   </div>
                 </div>
               </div>
@@ -609,21 +532,21 @@ console.log(providers);
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                     
-                      {userss.map((userr) => (
-                        <tr key={userr.username} className="hover:bg-gray-50">
+                      
+                        <tr key={userss?.username} className="hover:bg-gray-50">
                           
                           <td className="px-6 py-4 whitespace-nowrap">
-                            {userr.username}
+                            {userss?.username}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(userr.role)}`}
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(userss?.role ?? " ")}`}
                             >
-                              {userr.role}
+                              {userss?.role}
                             </span>
                           </td>
                         </tr>
-                      ))}
+                      
                     </tbody>
                   </table>
                 </div></>
@@ -659,10 +582,10 @@ console.log(providers);
                     {customers.map((customer) => (
                       <tr  className="hover:bg-gray-50">
     
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        {/* <td className="px-6 py-4 whitespace-nowrap">
           
                           {customer.username}
-                        </td>
+                        </td> */}
                         <td className="px-6 py-4 whitespace-nowrap">
                           
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -711,9 +634,7 @@ console.log(providers);
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Providers
                       </th>
-                      {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Role
-                      </th> */}
+                   
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -773,188 +694,6 @@ console.log(providers);
           )}
 
 
-
-          {/* {activeTab === "reports" && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">
-                Reports & Issues
-              </h3>
-
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                <div className="flex items-center">
-                  <AlertTriangle className="h-5 w-5 text-yellow-600 mr-3" />
-                  <div>
-                    <h4 className="font-medium text-yellow-800">
-                      3 pending reports require attention
-                    </h4>
-                    <p className="text-sm text-yellow-700">
-                      Review and resolve user-reported issues
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white rounded-xl p-6 shadow-sm text-center">
-                  <AlertTriangle className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-gray-900">3</div>
-                  <div className="text-sm text-gray-600">Pending Reports</div>
-                </div>
-                <div className="bg-white rounded-xl p-6 shadow-sm text-center">
-                  <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-gray-900">24</div>
-                  <div className="text-sm text-gray-600">
-                    Resolved This Week
-                  </div>
-                </div>
-                <div className="bg-white rounded-xl p-6 shadow-sm text-center">
-                  <Clock className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-gray-900">2.4h</div>
-                  <div className="text-sm text-gray-600">
-                    Avg Resolution Time
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h4 className="font-medium text-gray-900">
-                    Recent Reports
-                  </h4>
-                </div>
-                <div className="divide-y divide-gray-200">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="px-6 py-4 hover:bg-gray-50">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h5 className="font-medium text-gray-900">
-                            Report #{1000 + i}
-                          </h5>
-                          <p className="text-sm text-gray-600">
-                            Provider misconduct reported
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Submitted 2 hours ago
-                          </p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                            Pending
-                          </span>
-                          <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                            Review
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )} */}
-
-          {/* {activeTab === "settings" && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">
-                System Settings
-              </h3>
-              <div className="space-y-6">
-                <div className="bg-white rounded-xl p-6 shadow-sm">
-                  <h4 className="font-medium text-gray-900 mb-4">
-                    Platform Settings
-                  </h4>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">
-                          User Registration
-                        </label>
-                        <p className="text-xs text-gray-500">
-                          Allow new users to register
-                        </p>
-                      </div>
-                      <input
-                        type="checkbox"
-                        defaultChecked
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">
-                          Auto-approve Providers
-                        </label>
-                        <p className="text-xs text-gray-500">
-                          Automatically approve new service providers
-                        </p>
-                      </div>
-                      <input
-                        type="checkbox"
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">
-                          Maintenance Mode
-                        </label>
-                        <p className="text-xs text-gray-500">
-                          Put the platform in maintenance mode
-                        </p>
-                      </div>
-                      <input
-                        type="checkbox"
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-xl p-6 shadow-sm">
-                  <h4 className="font-medium text-gray-900 mb-4">
-                    Commission Settings
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Platform Fee (%)
-                      </label>
-                      <input
-                        type="number"
-                        defaultValue="10"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Payment Processing Fee (%)
-                      </label>
-                      <input
-                        type="number"
-                        defaultValue="2.9"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-red-50 rounded-xl p-6">
-                  <h4 className="font-medium text-red-900 mb-4">
-                    Danger Zone
-                  </h4>
-                  <div className="space-y-3">
-                    <button className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
-                      Reset All Data
-                    </button>
-                    <p className="text-sm text-red-700">
-                      This action cannot be undone. This will permanently
-                      delete all platform data.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )} */}
         </div>
       </div>
     </div>
