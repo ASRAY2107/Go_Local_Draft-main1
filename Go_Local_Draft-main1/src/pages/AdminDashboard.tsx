@@ -373,7 +373,7 @@ console.log(providers);
             <nav className="flex space-x-8 px-8">
               {[
                 { id: "overview", label: "Overview", icon: TrendingUp },
-                { id: "users", label: "Users", icon: Users },
+              
                 { id: "customer", label: "Customer", icon: Activity }, //cuustomer
                 { id: "provider", label: "Provider", icon: BarChart3 } //provider
               ].map((tab) => (
@@ -493,13 +493,13 @@ console.log(providers);
                     Quick Actions
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <button
+                    {/* <button
                       onClick={() => setActiveTab("users")}
                       className="bg-white p-4 rounded-lg hover:shadow-md transition-shadow text-center"
-                    >
-                      <Users className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                    > */}
+                      {/* <Users className="h-8 w-8 text-blue-600 mx-auto mb-2" />
                       <p className="font-medium text-gray-900">Manage Users</p>
-                    </button>
+                    </button> */}
                     <button
                       onClick={() => setActiveTab("customer")}
                       className="bg-white p-4 rounded-lg hover:shadow-md transition-shadow text-center"
@@ -515,7 +515,7 @@ console.log(providers);
               </div>
             )}
 
-            {activeTab === "users" && (
+            {/* {activeTab === "users" && (
               <>
 
               <div className="bg-white rounded-lg overflow-hidden">
@@ -554,7 +554,7 @@ console.log(providers);
               
             )}
 
-            
+             */}
 
           {activeTab === "customer" && (
             <>
@@ -566,14 +566,14 @@ console.log(providers);
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Customers
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer Name
+                      {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer Name
 
                       </th>
 
 
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer Location
 
-                      </th>
+                      </th> */}
                     </tr>
 
                   </thead>
@@ -603,15 +603,6 @@ console.log(providers);
                           {customer.email}
                         </td>
 
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {customer.rating}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {customer.profilePicture}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {customer.noOfBookings}
-                        </td>
 
                         </td>
                       </tr>
@@ -660,30 +651,13 @@ console.log(providers);
                           {provider.email}
                         </td>
 
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {provider.rating}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {provider.profilePicture}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {provider.noOfBookings}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {provider.service.serviceId}
-                          {provider.service.serviceName}
-                          {provider.service.noOfUser}
-                        </td>
+                    
 
                         <td className="px-6 py-4 whitespace-nowrap">
                           {provider.experience}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {provider.description}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {provider.noOfTimesBooked}
-                        </td>
+                       
+                    
 
                         </td>
                       </tr>

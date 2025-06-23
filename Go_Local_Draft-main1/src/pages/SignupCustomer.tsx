@@ -52,6 +52,8 @@ const SignupCustomer: React.FC = () => {
     }
   };
 
+  
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
