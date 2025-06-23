@@ -141,15 +141,15 @@ const CustomerDashboard: React.FC = () => {
           <div className="flex items-center space-x-4 mb-4">
             <img
               src={
-                user?.avatar ||
+                user?.username ||
                 "https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=150"
               }
-              alt={user?.name}
+              alt={user?.username}
               className="w-16 h-16 rounded-full object-cover"
             />
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                Welcome back, {user?.name}!
+                Welcome back, {user?.username}!
               </h1>
               <p className="text-gray-600">
                 Manage your bookings and discover new services
@@ -497,11 +497,11 @@ const CustomerDashboard: React.FC = () => {
                       </label>
                       <input
                         type="text"
-                        defaultValue={user?.name}
+                        defaultValue={user?.username}
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
-                    <div>
+                    {/* <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Email
                       </label>
@@ -510,8 +510,8 @@ const CustomerDashboard: React.FC = () => {
                         defaultValue={user?.email}
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
-                    </div>
-                    <div>
+                    </div> */}
+                    {/* <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Phone
                       </label>
@@ -520,8 +520,8 @@ const CustomerDashboard: React.FC = () => {
                         defaultValue={user?.phone}
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
-                    </div>
-                    <div>
+                    </div> */}
+                    {/* <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Location
                       </label>
@@ -530,14 +530,14 @@ const CustomerDashboard: React.FC = () => {
                         defaultValue={user?.location}
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
-                    </div>
+                    </div> */}
                   </div>
                   <div className="space-y-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Profile Picture
                       </label>
-                      <div className="flex items-center space-x-4">
+                      {/* <div className="flex items-center space-x-4">
                         <img
                           src={
                             user?.avatar ||
@@ -549,7 +549,7 @@ const CustomerDashboard: React.FC = () => {
                         <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                           Change Picture
                         </button>
-                      </div>
+                      </div> */}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">

@@ -128,22 +128,22 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     >
                       <img
                         src={
-                          user.profile  ||
+                          // user.profile  ||
                           "https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=150"
                         } // customer or provider user 
-                        alt={user.name}
+                        alt={user.username}
                         className="w-8 h-8 rounded-full object-cover"
                       />
-                      <span className="font-medium">{user.name}</span>
+                      <span className="font-medium">{user.username}</span>
                     </button>
 
                     {showUserMenu && (
                       <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-premium border border-gray-100 py-2 z-[200]">
                         <div className="px-4 py-3 border-b border-gray-100">
                           <p className="font-medium text-gray-900">
-                            {user.name}
+                            {user.username}
                           </p>
-                          <p className="text-sm text-gray-500">{user.email}</p>
+                          {/* <p className="text-sm text-gray-500">{user.email}</p> */}
                           <span
                             className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-2 ${
                               user.role === "ROLE_ADMIN"
@@ -260,14 +260,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     <div className="flex items-center space-x-3 px-4 py-3 bg-gray-50 rounded-xl">
                       <img
                         src={
-                          user.avatar ||
+                          // user.avatar ||
                           "https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=150"
                         }
-                        alt={user.name}
+                        alt={user.username}
                         className="w-10 h-10 rounded-full object-cover"
                       />
                       <div>
-                        <p className="font-medium text-gray-900">{user.name}</p>
+                        <p className="font-medium text-gray-900">{user.username}</p>
                         <p className="text-sm text-gray-500">{user.role}</p>
                       </div>
                     </div>

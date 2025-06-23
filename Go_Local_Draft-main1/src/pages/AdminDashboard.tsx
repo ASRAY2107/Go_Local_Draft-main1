@@ -22,13 +22,22 @@ import {
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
+export type Users = {
+  username: string;
+  password: string;
+  role: string;
+  isDeleted: boolean;
+};
+
+
+
 
 
 
 const AdminDashboard: React.FC = () => {
-  const { user } = useAuth();
+   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
-
+  const [userss, setUserss] = useState<Users[]>([]);
 
   const stats = [
     {
@@ -107,7 +116,7 @@ const AdminDashboard: React.FC = () => {
         );
 
         console.log(res);
-        setUsers(res.data);
+        setUserss(res.data);
       } catch (err) {
         // Handle error (show error message, etc.)
         console.error(err);
@@ -385,10 +394,6 @@ console.log(providers);
 
 
 
-  
-
-
-
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -603,16 +608,18 @@ console.log(providers);
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {users.map((user) => (
-                        <tr key={user.username} className="hover:bg-gray-50">
+                    
+                      {userss.map((userr) => (
+                        <tr key={userr.username} className="hover:bg-gray-50">
+                          
                           <td className="px-6 py-4 whitespace-nowrap">
-                            {user.username}
+                            {userr.username}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(userr.role)}`}
                             >
-                              {user.role}
+                              {userr.role}
                             </span>
                           </td>
                         </tr>

@@ -204,7 +204,7 @@ const ProviderDashboard: React.FC = () => {
             />
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                Welcome back, {user?.name}!
+                Welcome back, {user?.username}!
               </h1>
               <p className="text-gray-600">
                 Manage your services and track your performance
