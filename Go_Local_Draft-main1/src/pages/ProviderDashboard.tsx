@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { User, Calendar, Award, LogOut, LayoutDashboard } from 'lucide-react';
+import { User, Calendar, Award, LayoutDashboard } from 'lucide-react'; // LogOut is no longer needed
 
 // Import the tab content components
 import ProviderProfileInfo from '../components/ProviderProfileInfo';
@@ -21,13 +21,14 @@ const ProviderDashboard: React.FC = () => {
     // Basic authentication check
     useEffect(() => {
         const token = localStorage.getItem('token');
-        const userRole = localStorage.getItem('userRole'); // Assuming you store user role
-        if (!token || userRole !== 'PROVIDER') { // Ensure only providers access this dashboard
+        if (!token) { // Ensure only providers access this dashboard
             console.warn("Authentication failed or role mismatch. Redirecting to login.");
             navigate('/auth'); // Redirect to login if not authenticated or not a provider
         }
     }, [navigate]);
 
+    // handleLogout function is no longer needed as the logout button is removed
+    /*
     const handleLogout = async () => {
         try {
             await axios.post(`${API_BASE_URL}/auth/logout`, {}, {
@@ -42,78 +43,15 @@ const ProviderDashboard: React.FC = () => {
             navigate('/auth'); // Redirect to login page
         }
     };
+    */
 
     const username = localStorage.getItem('username'); // Get username for display
 
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
-            {/* Header / Navbar - Adjusted to match screenshot's aesthetic */}
-            <header className="bg-white text-gray-800 p-4 shadow-md">
-                <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center">
-                    <div className="flex items-center space-x-3 mb-2 sm:mb-0">
-                        {/* Assuming a logo or title similar to "Go Local" in the screenshot */}
-                        <img src="/go-local-logo.png" alt="Go Local Logo" className="h-8 w-8" /> {/* Replace with your actual logo path */}
-                        <span className="text-2xl font-bold text-gray-800">Go Local</span>
-                        <span className="text-sm text-gray-500">Premium Services</span>
-                    </div>
-                    
-                    <nav className="w-full sm:w-auto">
-                        <ul className="flex justify-around sm:justify-end space-x-2 sm:space-x-6 text-sm sm:text-base">
-                            {/* Adjusted Navigation (similar to screenshot's structure) */}
-                            <li>
-                                <button
-                                    onClick={() => navigate('/home')} // Assuming a general home page
-                                    className="p-2 rounded-md transition-colors text-gray-700 hover:text-blue-600 font-medium"
-                                >
-                                    Home
-                                </button>
-                            </li>
-                            <li>
-                                <button
-                                    onClick={() => navigate('/services')} // Assuming a services page
-                                    className="p-2 rounded-md transition-colors text-gray-700 hover:text-blue-600 font-medium"
-                                >
-                                    Services
-                                </button>
-                            </li>
-                            <li>
-                                <button
-                                    onClick={() => navigate('/about')} // Assuming an about page
-                                    className="p-2 rounded-md transition-colors text-gray-700 hover:text-blue-600 font-medium"
-                                >
-                                    About
-                                </button>
-                            </li>
-                            <li>
-                                <button
-                                    onClick={() => setActiveTab('profileInfo')} // Keep dashboard tab active for current view
-                                    className={`p-2 rounded-md transition-colors font-semibold ${
-                                        activeTab === 'profileInfo' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-700 hover:text-blue-600'
-                                    }`}
-                                >
-                                    Dashboard
-                                </button>
-                            </li>
-                            {/* User Profile / Logout Button (similar to screenshot's right side) */}
-                            <li>
-                                <div className="flex items-center space-x-2">
-                                    <img src="https://via.placeholder.com/32" alt="User Avatar" className="w-8 h-8 rounded-full border border-gray-300" />
-                                    <span className="text-gray-800 font-medium hidden sm:block">{username || 'Provider'}</span>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="p-2 text-gray-600 hover:text-red-500 transition-colors"
-                                        title="Logout"
-                                    >
-                                        <LogOut className="h-5 w-5" />
-                                    </button>
-                                </div>
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
-            </header>
+            {/* Removed the entire <header> section including GoLocal branding, nav links, and logout */}
 
-            {/* Admin Dashboard Title & System Access - Replicating this section's look */}
+            {/* Provider Dashboard Title & System Access - This is now the first element */}
             <div className="container mx-auto p-4 pt-8">
                 <div className="bg-white rounded-xl shadow-md p-6 mb-6">
                     <h2 className="text-3xl font-bold text-gray-900 mb-2 flex items-center space-x-3">
