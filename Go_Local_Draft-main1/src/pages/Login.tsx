@@ -80,6 +80,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             'Content-Type': 'application/json'
           }
         });
+        localStorage.setItem("username", res.data);
 
 
         setUser(res.data);

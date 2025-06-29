@@ -18,7 +18,7 @@ import SignupHelper from "./pages/SignupHelper";
 // Dashboards
 import CustomerDashboard from "./pages/CustomerDashboard";
 // import ProviderDashboard from "./pages/ProviderDashboard";
-import { ProviderDashboard } from "./pages/ProviderDashboard";
+import ProviderDashboard from "./pages/ProviderDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 
 // Legacy Dashboard (for backward compatibility)
