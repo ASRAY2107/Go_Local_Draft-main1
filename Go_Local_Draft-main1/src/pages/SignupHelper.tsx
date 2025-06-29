@@ -3,62 +3,61 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Upload, User, Phone, MapPin, Briefcase, FileText } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
+
+export type Service = {
+  serviceId : string,
+  serviceName : string
+  noOfProviders: number;
+}
+
+
 const SignupHelper: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+ 
   const [userType, setUserType] = useState<'helper' | 'customer'>('helper');
   const [formData, setFormData] = useState({
-    name: '',
-    mobile: '',
-    occupation: '',
-    location: '',
-    username: '',
-    description: '',
-    password: '',
-    confirmPassword: ''
+    username:"",
+    password:"",
+    role:"ROLE_PROVIDER",
+    isDeleted:false,
+    providerName:"",
+    location:"",
+    mobileNumber:"",
+    email:"",
+    profilePicture:"",
+    service:{
+      serviceId:"",
+      serviceName:""
+    },
+    experience:"",
+    description:""
   });
+
+
 
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const occupations = [
-    'Electrician',
-    'Plumber',
-    'Carpenter',
-    'Painter',
-    'Cleaner',
-    'Gardener',
-    'Mechanic',
-    'Technician',
-    'Music Tutor',
-    'Academic Tutor',
-    'Fitness Trainer',
-    'Chef/Cook',
-    'Photographer',
-    'Other'
-  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
-      return;
-    }
+   
 
     // Validate mobile number (basic Indian mobile number validation)
     const mobileRegex = /^[6-9]\d{9}$/;
-    if (!mobileRegex.test(formData.mobile)) {
+    if (!mobileRegex.test(formData.mobileNumber)) {
       alert('Please enter a valid 10-digit mobile number');
       return;
     }
 
     try {
       const success = await register({
-        name: formData.name,
-        phone: formData.mobile,
+        name: formData.username,
+        phone: formData.mobileNumber,
         location: formData.location,
         role: 'ROLE_PROVIDER',
-        serviceCategory: formData.occupation,
+        serviceCategory: formData.service.serviceId,
+
         description: formData.description
       }, formData.password);
 
@@ -140,7 +139,7 @@ const SignupHelper: React.FC = () => {
                       type="text"
                       id="name"
                       name="name"
-                      value={formData.name}
+                      value={formData.providerName}
                       onChange={handleChange}
                       required
                       className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white/80"
@@ -160,7 +159,7 @@ const SignupHelper: React.FC = () => {
                       type="tel"
                       id="mobile"
                       name="mobile"
-                      value={formData.mobile}
+                      value={formData.mobileNumber}
                       onChange={handleChange}
                       required
                       pattern="[6-9][0-9]{9}"
@@ -309,7 +308,8 @@ const SignupHelper: React.FC = () => {
                     </button>
                   </div>
                 </div>
-                <div>
+                </div>
+                {/* <div>
                   <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
                     Confirm Password
                   </label>
@@ -337,7 +337,7 @@ const SignupHelper: React.FC = () => {
                     </button>
                   </div>
                 </div>
-              </div>
+              </div> */}
 
               <button
                 type="submit"

@@ -1,3 +1,4 @@
+// src/components/AdminDashboard.tsx
 import axios from "axios";
 import {
   Activity,
@@ -10,89 +11,54 @@ import {
   Eye,
   Globe,
   PieChart,
-  Plus,
+  Plus, // Make sure Plus icon is imported
   Search,
   Settings,
   Shield,
   Star,
   Trash2,
   TrendingUp,
-  Users
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { useAuth } from "../contexts/AuthContext";
+import CreateCustomer from "../components/CreateCustomer";
+import CreateProvider from "../components/CreateProvider";
+import SearchCustomer from "../components/SearchCustomer";
+import SearchProvider from "../components/SearchProvider";
+import UpdateCustomer from "../components/UpdateCustomer";
+import UpdateProvider from "../components/UpdateProvider";
+import DeleteConfirmationModal from "../components/DeleteConfirmation";
+import CreateService from "../components/CreateServices"; // NEW: Import CreateService
 
-export type Users = {
-  username: string;
-  password: string;
-  role: string;
-  isDeleted: boolean;
-};
-export  type Services = {
-  serviceId :string,
-  serviceName :string,
-  noOfUser :number
-
-}
-
-export type Provider = {
-  username:String,
-  providerName :String,
-  location :String,
-  mobileNumber : BigInt,
-  email:String,
-  rating:String,
-  profilePicture: Uint8Array ,
-  noOfBookings:number,
-  service: Services,
-  experience: number
-  description: Uint8Array,
-  noOfTimesBooked: number
-}
-
-
+import { Customer, Provider, Services } from "../components/exportTypes"; // NEW: Import Services type
 
 const AdminDashboard: React.FC = () => {
-  //  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("overview");
-  const [userss, setUserss] = useState<Users | undefined>();
+  const [activeTab, setActiveTab] = useState("customer");
   const [username, setUsername] = useState<string | undefined>();
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [providers, setProviders] = useState<Provider[]>([]);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const stats = [
-    {
-      icon: Users,
-      label: "Total Users",
-      value: "2,847",
-      change: "+12%",
-      color: "text-blue-600",
-      bg: "bg-blue-100",
-    },
-    {
-      icon: Activity,
-      label: "Active Bookings",
-      value: "156",
-      change: "+8%",
-      color: "text-green-600",
-      bg: "bg-green-100",
-    },
-    {
-      icon: DollarSign,
-      label: "Total Revenue",
-      value: "₹2,45,670",
-      change: "+15%",
-      color: "text-purple-600",
-      bg: "bg-purple-100",
-    },
-    {
-      icon: Star,
-      label: "Avg Rating",
-      value: "4.8",
-      change: "+0.2",
-      color: "text-yellow-600",
-      bg: "bg-yellow-100",
-    },
-  ];
+  // States for customer search
+  const [foundCustomer, setFoundCustomer] = useState<Customer | null>(null);
+  const [searchCustomerError, setSearchCustomerError] = useState<string | null>(null);
+  const [isCustomerSearchActive, setIsCustomerSearchActive] = useState<boolean>(false);
 
+  // States for provider search
+  const [foundProvider, setFoundProvider] = useState<Provider | null>(null);
+  const [searchProviderError, setSearchProviderError] = useState<string | null>(null);
+  const [isProviderSearchActive, setIsProviderSearchActive] = useState<boolean>(false);
+
+  // State for customer update
+  const [customerToUpdate, setCustomerToUpdate] = useState<Customer | null>(null);
+
+  // State for provider update
+  const [providerToUpdate, setProviderToUpdate] = useState<Provider | null>(null);
+
+  // States for deletion confirmation
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{ username: string; type: 'customer' | 'provider'; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   type Users = {
     username: string;
@@ -100,10 +66,8 @@ const AdminDashboard: React.FC = () => {
     role: string;
     isDeleted: boolean;
   };
- 
 
   useEffect(() => {
-    // Define the async function INSIDE the effect
     const fetchUsers = async () => {
       try {
         const res = await axios.get(
@@ -115,183 +79,304 @@ const AdminDashboard: React.FC = () => {
             }
           }
         );
-
         console.log(res.data);
         setUsername(res.data);
       } catch (err) {
-        // Handle error (show error message, etc.)
         console.error(err);
       }
     };
+    fetchUsers();
+  }, []);
 
-    fetchUsers(); // Call the async function
-  },[]); // Empty deps = run on initiual mount
-
-  // console.log(users);
-
-  type Customer = {
-    // username:String,
-    customerName :String,
-    location :String,
-    mobileNumber : BigInt,
-    email:String,
-    rating:String,
-    profilePicture: Uint8Array ,
-    noOfBookings:number
-  }
-
-  const[customers , setCustomers] = useState<Customer[]>([]);
-
+  // Fetch all customers only if no customer search is active AND not in update mode
   useEffect(() => {
-    // Define the async function INSIDE the effect
-    const CustomersUsers = async () => {
-      try {
-        const Cusres = await axios.get<Customer[]>(
-          'http://localhost:8080/api/admin/get-customers',
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-              'Content-Type': 'application/json'
+    const fetchAllCustomers = async () => {
+      if (!isCustomerSearchActive && activeTab === "customer" && !customerToUpdate) {
+        try {
+          const Cusres = await axios.get<Customer[]>(
+            'http://localhost:8080/api/admin/get-customers',
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                'Content-Type': 'application/json'
+              }
             }
-          }
-        );
-
-        console.log(Cusres.data);
-        setCustomers(Cusres.data);
-      } catch (err) {
-        // Handle error (show error message, etc.)
-        console.error(err);
+          );
+          console.log(Cusres.data);
+          setCustomers(Cusres.data);
+        } catch (err) {
+          console.error(err);
+        }
       }
     };
+    fetchAllCustomers();
+  }, [isCustomerSearchActive, activeTab, customerToUpdate]);
 
-    CustomersUsers(); // Call the async function
-  }, []); // Empty deps = run on mount
+  console.log("Current Customers:", customers);
 
-  console.log(customers);
-
-//   type Services = {
-//     serviceId :string,
-//     serviceName :string,
-//     noOfUser :number
-
-//   }
-
-
-// type Provider = {
-//     username:String,
-//     providerName :String,
-//     location :String,
-//     mobileNumber : BigInt,
-//     email:String,
-//     rating:String,
-//     profilePicture: Uint8Array ,
-//     noOfBookings:number,
-//     service: Services,
-//     experience: number
-//     description: Uint8Array,
-//     noOfTimesBooked: number
-// }
-const[providers , setProvider] = useState<Provider[]>([]);
-
-useEffect(() => {
-  // Define the async function INSIDE the effect
-  const ProvidersUsers = async () => {
-    try {
-      const prores = await axios.get<Provider[]>(
-        'http://localhost:8080/api/admin/get-providers',
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            'Content-Type': 'application/json'
-          }
+  // Fetch all providers only if no provider search is active AND not in update mode
+  useEffect(() => {
+    const fetchAllProviders = async () => {
+      if (!isProviderSearchActive && !providerToUpdate) {
+        try {
+          const prores = await axios.get<Provider[]>(
+            'http://localhost:8080/api/admin/get-providers',
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+          console.log(prores.data);
+          setProviders(prores.data);
+        } catch (err) {
+          console.error(err);
         }
-      );
+      }
+    };
+    fetchAllProviders();
+  }, [isProviderSearchActive, providerToUpdate]);
 
-      console.log(prores.data);
-      setProvider(prores.data);
-    } catch (err) {
-      // Handle error (show error message, etc.)
-      console.error(err);
-    }
-  };
-
-  ProvidersUsers(); // Call the async function
-}, []); // Empty deps = run on mount
-
-console.log(providers);
-
+  console.log("Current Providers:", providers);
 
   const [loading, setLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState("All Roles");
 
 
+  // Callback function to handle new customer creation
+  const handleNewCustomerCreated = (newCustomer: Customer) => {
+    setCustomers(prevCustomers => [...prevCustomers, newCustomer]);
+    setActiveTab("customer");
+    setFoundCustomer(null);
+    setSearchCustomerError(null);
+    setIsCustomerSearchActive(false);
+    setCustomerToUpdate(null);
+    setSuccess(`Customer '${newCustomer.customerName}' created successfully!`);
+    setTimeout(() => setSuccess(null), 3000);
+    setError(null); // Clear any error messages from previous attempts
+  };
+
+  const handleCreateCustomerCancel = () => {
+    setActiveTab("customer");
+    setError(null);
+    setSuccess(null);
+  };
+
+  // Callback function to handle new provider creation
+  const handleNewProviderCreated = (newProvider: Provider) => {
+    setProviders(prevProviders => [...prevProviders, newProvider]);
+    setActiveTab("provider");
+    setFoundProvider(null);
+    setSearchProviderError(null);
+    setIsProviderSearchActive(false);
+    setProviderToUpdate(null);
+    setSuccess(`Provider '${newProvider.providerName}' created successfully!`);
+    setTimeout(() => setSuccess(null), 3000);
+    setError(null); // Clear any error messages from previous attempts
+  };
+
+  const handleCreateProviderCancel = () => {
+    setActiveTab("provider");
+    setError(null);
+    setSuccess(null);
+  };
+
+  // NEW: Callback function to handle new service creation
+  const handleNewServiceCreated = (newService: Services) => {
+    // If you had a list of services to display, you would update that state here.
+    // For now, we'll just show a success message and switch back to a relevant tab.
+    setActiveTab("create-service"); // Stay on create tab, or switch to 'customer' or 'provider' if preferred
+    setSuccess(`Service '${newService.serviceName}' (ID: ${newService.serviceId}) created successfully!`);
+    setTimeout(() => setSuccess(null), 3000);
+    setError(null); // Clear any error messages from previous attempts
+  };
+
+  const handleCreateServiceCancel = () => {
+    setActiveTab("customer"); // Or 'provider' or keep on 'create-service'
+    setError(null);
+    setSuccess(null);
+  };
 
 
-  const services = [
-    {
-      id: "1",
-      name: "Home Cleaning",
-      category: "Household",
-      providers: 45,
-      bookings: 234,
-      avgRating: 4.7,
-      status: "active",
-    },
-    {
-      id: "2",
-      name: "Electrical Work",
-      category: "Maintenance",
-      providers: 32,
-      bookings: 189,
-      avgRating: 4.8,
-      status: "active",
-    },
-    {
-      id: "3",
-      name: "Plumbing",
-      category: "Maintenance",
-      providers: 28,
-      bookings: 156,
-      avgRating: 4.6,
-      status: "active",
-    },
-  ];
+  // --- SearchCustomer Callbacks ---
+  const handleCustomerFound = (customer: Customer | null) => {
+    setFoundCustomer(customer);
+    setSearchCustomerError(null);
+    setCustomerToUpdate(null);
+    setError(null); // Clear general error
+    setSuccess(null); // Clear general success
+  };
 
-  const recentActivity = [
-    {
-      id: "1",
-      type: "user_registered",
-      message: "New user John Doe registered as customer",
-      time: "2 hours ago",
-      status: "info",
-    },
-    {
-      id: "2",
-      type: "booking_completed",
-      message: "Booking #1234 completed successfully",
-      time: "4 hours ago",
-      status: "success",
-    },
-    {
-      id: "3",
-      type: "report_submitted",
-      message: "User reported issue with provider",
-      time: "6 hours ago",
-      status: "warning",
-    },
-    {
-      id: "4",
-      type: "payment_processed",
-      message: "Payment of ₹2,500 processed",
-      time: "8 hours ago",
-      status: "success",
-    },
-  ];
+  const handleCustomerSearchError = (error: string | null) => {
+    setSearchCustomerError(error);
+    setFoundCustomer(null);
+    setCustomerToUpdate(null);
+    setError(null); // Clear general error
+    setSuccess(null); // Clear general success
+  };
 
+  const handleCustomerSearchActiveChange = (isActive: boolean) => {
+    setIsCustomerSearchActive(isActive);
+    if (!isActive) {
+      setFoundCustomer(null);
+      setSearchCustomerError(null);
+    }
+  };
+  // --- End SearchCustomer Callbacks ---
 
+  // --- SearchProvider Callbacks ---
+  const handleProviderFound = (provider: Provider | null) => {
+    setFoundProvider(provider);
+    setSearchProviderError(null);
+    setProviderToUpdate(null);
+    setError(null); // Clear general error
+    setSuccess(null); // Clear general success
+  };
 
+  const handleProviderSearchError = (error: string | null) => {
+    setSearchProviderError(error);
+    setFoundProvider(null);
+    setProviderToUpdate(null);
+    setError(null); // Clear general error
+    setSuccess(null); // Clear general success
+  };
 
+  const handleProviderSearchActiveChange = (isActive: boolean) => {
+    setIsProviderSearchActive(isActive);
+    if (!isActive) {
+      setFoundProvider(null);
+      setSearchProviderError(null);
+    }
+  };
+  // --- End SearchProvider Callbacks ---
 
+  // --- UpdateCustomer Callbacks ---
+  const handleEditCustomer = (customer: Customer) => {
+    setCustomerToUpdate(customer);
+    setActiveTab("customer");
+    setIsCustomerSearchActive(false);
+    setFoundCustomer(null);
+    setSearchCustomerError(null);
+    setSuccess(null);
+    setError(null);
+  };
+
+  const handleCustomerUpdateSuccess = (updatedCustomer: Customer) => {
+    setCustomers(prevCustomers =>
+      prevCustomers.map(cust =>
+        cust.username === updatedCustomer.username ? updatedCustomer : cust
+      )
+    );
+    setCustomerToUpdate(null);
+    setActiveTab("customer");
+    setSuccess(`Customer '${updatedCustomer.customerName}' updated successfully!`);
+    setTimeout(() => setSuccess(null), 3000);
+    setError(null);
+  };
+
+  const handleCustomerUpdateCancel = () => {
+    setCustomerToUpdate(null);
+    setActiveTab("customer");
+    setSearchCustomerError(null);
+    setFoundCustomer(null);
+    setError(null);
+    setSuccess(null);
+  };
+  // --- End UpdateCustomer Callbacks ---
+
+  // --- UpdateProvider Callbacks ---
+  const handleEditProvider = (provider: Provider) => {
+    setProviderToUpdate(provider);
+    setActiveTab("provider");
+    setIsProviderSearchActive(false);
+    setFoundProvider(null);
+    setSearchProviderError(null);
+    setSuccess(null);
+    setError(null);
+  };
+
+  const handleProviderUpdateSuccess = (updatedProvider: Provider) => {
+    setProviders(prevProviders =>
+      prevProviders.map(prov =>
+        prov.username === updatedProvider.username ? updatedProvider : prov
+      )
+    );
+    setProviderToUpdate(null);
+    setActiveTab("provider");
+    setSuccess(`Provider '${updatedProvider.providerName}' updated successfully!`);
+    setTimeout(() => setSuccess(null), 3000);
+    setError(null);
+  };
+
+  const handleProviderUpdateCancel = () => {
+    setProviderToUpdate(null);
+    setActiveTab("provider");
+    setSearchProviderError(null);
+    setFoundProvider(null);
+    setError(null);
+    setSuccess(null);
+  };
+  // --- End UpdateProvider Callbacks ---
+
+  // --- Deletion Handlers ---
+  const handleDeleteClick = (username: string, type: 'customer' | 'provider', name: string) => {
+    setItemToDelete({ username, type, name });
+    setShowDeleteConfirmation(true);
+    setSuccess(null);
+    setError(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return;
+
+    setIsDeleting(true);
+    setError(null);
+
+    try {
+      const { username, type, name } = itemToDelete;
+      let deleteEndpoint = '';
+
+      if (type === 'customer') {
+        deleteEndpoint = `http://localhost:8080/api/admin/delete-customer/${username}`;
+      } else if (type === 'provider') {
+        deleteEndpoint = `http://localhost:8080/api/admin/delete-provider/${username}`;
+      } else {
+        throw new Error('Unknown user type for deletion.');
+      }
+
+      await axios.delete(deleteEndpoint, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (type === 'customer') {
+        setCustomers(prev => prev.filter(cust => cust.username !== username));
+      } else if (type === 'provider') {
+        setProviders(prev => prev.filter(prov => prov.username !== username));
+      }
+
+      setSuccess(`${name} (${username}) deleted successfully!`);
+      setTimeout(() => setSuccess(null), 3000);
+
+    } catch (err: any) {
+      console.error("Error deleting user:", err);
+      setError(err.response?.data?.message || `Failed to delete ${itemToDelete.name}. Please try again.`);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirmation(false);
+      setItemToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirmation(false);
+    setItemToDelete(null);
+    setIsDeleting(false);
+    setError(null);
+  };
+  // --- End Deletion Handlers ---
 
 
   const getStatusColor = (status: string) => {
@@ -328,8 +413,6 @@ console.log(providers);
     }
   };
 
-
-
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -348,8 +431,7 @@ console.log(providers);
                 Admin Dashboard
               </h1>
               <p className="text-gray-600">
-
-                Welcome back, {username} Manage your platform efficiently
+                Welcome back {username} ,Manage your platform efficiently
               </p>
               <div className="flex items-center space-x-4 mt-2">
                 <div className="flex items-center space-x-1">
@@ -372,17 +454,18 @@ console.log(providers);
           <div className="border-b border-gray-200">
             <nav className="flex space-x-8 px-8">
               {[
-                { id: "overview", label: "Overview", icon: TrendingUp },
-              
-                { id: "customer", label: "Customer", icon: Activity }, //cuustomer
-                { id: "provider", label: "Provider", icon: BarChart3 } //provider
+                { id: "customer", label: "Customer", icon: Activity },
+                { id: "provider", label: "Provider", icon: BarChart3 },
+                { id: "create-customer", label: "Create Customer", icon: Plus },
+                { id: "create-provider", label: "Create Provider", icon: Plus },
+                { id: "create-service", label: "Create Service", icon: Plus } // NEW: Tab for Create Service
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
-                      ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     }`}
                 >
                   <tab.icon className="h-4 w-4" />
@@ -393,285 +476,394 @@ console.log(providers);
           </div>
 
           <div className="p-8">
-            {activeTab === "overview" && (
-              <div className="space-y-8">
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {stats.map((stat, index) => (
-                    <div
-                      key={index}
-                      className="bg-gray-50 rounded-xl p-6 hover-lift"
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <div
-                          className={`w-12 h-12 rounded-lg ${stat.bg} flex items-center justify-center`}
-                        >
-                          <stat.icon className={`h-6 w-6 ${stat.color}`} />
-                        </div>
-                        <span className={`text-sm font-medium ${stat.color}`}>
-                          {stat.change}
-                        </span>
-                      </div>
-                      <div className="text-2xl font-bold text-gray-900 mb-1">
-                        {stat.value}
-                      </div>
-                      <div className="text-sm text-gray-600">{stat.label}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Charts and Activity */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  <div className="lg:col-span-2 bg-gray-50 rounded-xl p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      Platform Growth
-                    </h3>
-                    <div className="h-64 bg-white rounded-lg flex items-center justify-center">
-                      <div className="text-center">
-                        <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                        <p className="text-gray-500">
-                          Growth chart would go here
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 rounded-xl p-6">
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        Recent Activity
-                      </h3>
-                      <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                        View All
-                      </button>
-                    </div>
-                    <div className="space-y-4">
-                      {recentActivity.map((activity) => (
-                        <div
-                          key={activity.id}
-                          className="bg-white rounded-lg p-4"
-                        >
-                          <div className="flex items-start space-x-3">
-                            <div
-                              className={`w-8 h-8 rounded-full flex items-center justify-center ${activity.status === "info"
-                                  ? "bg-blue-100"
-                                  : activity.status === "success"
-                                    ? "bg-green-100"
-                                    : activity.status === "warning"
-                                      ? "bg-yellow-100"
-                                      : "bg-red-100"
-                                }`}
-                            >
-                              {activity.status === "info" && (
-                                <Activity className="h-4 w-4 text-blue-600" />
-                              )}
-                              {activity.status === "success" && (
-                                <CheckCircle className="h-4 w-4 text-green-600" />
-                              )}
-                              {activity.status === "warning" && (
-                                <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm text-gray-900">
-                                {activity.message}
-                              </p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                {activity.time}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quick Actions */}
-                <div className="bg-gray-50 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Quick Actions
-                  </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {/* <button
-                      onClick={() => setActiveTab("users")}
-                      className="bg-white p-4 rounded-lg hover:shadow-md transition-shadow text-center"
-                    > */}
-                      {/* <Users className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                      <p className="font-medium text-gray-900">Manage Users</p>
-                    </button> */}
-                    <button
-                      onClick={() => setActiveTab("customer")}
-                      className="bg-white p-4 rounded-lg hover:shadow-md transition-shadow text-center"
-                    >
-                      <Activity className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                      <p className="font-medium text-gray-900">
-                        All Customers
-                      </p>
-                    </button>
-                 
-                  </div>
-                </div>
+            {/* General Error Message */}
+            {error && (
+              <div className="flex items-center p-3 mb-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
+                <AlertTriangle className="flex-shrink-0 inline w-4 h-4 mr-3" />
+                <div>{error}</div>
               </div>
             )}
 
-            {/* {activeTab === "users" && (
-              <>
-
-              <div className="bg-white rounded-lg overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          User
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Role
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                    
-                      
-                        <tr key={userss?.username} className="hover:bg-gray-50">
-                          
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {userss?.username}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(userss?.role ?? " ")}`}
-                            >
-                              {userss?.role}
-                            </span>
-                          </td>
-                        </tr>
-                      
-                    </tbody>
-                  </table>
-                </div></>
-            
-              
+            {/* General Success Message */}
+            {success && (
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <CheckCircle className="inline h-4 w-4 mr-2" />
+                <span className="block sm:inline">{success}</span>
+              </div>
             )}
 
-             */}
+            {activeTab === "customer" && (
+              <div className="bg-white rounded-lg overflow-hidden">
+                {customerToUpdate ? (
+                  <UpdateCustomer
+                    customer={customerToUpdate}
+                    onUpdateSuccess={handleCustomerUpdateSuccess}
+                    onCancel={handleCustomerUpdateCancel}
+                  />
+                ) : (
+                  <>
+                    <SearchCustomer
+                      onCustomerFound={handleCustomerFound}
+                      onSearchError={setSearchCustomerError}
+                      onSearchActiveChange={handleCustomerSearchActiveChange}
+                    />
 
-          {activeTab === "customer" && (
-            <>
+                    {searchCustomerError && (
+                      <div className="flex items-center p-3 mb-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
+                        <AlertTriangle className="flex-shrink-0 inline w-4 h-4 mr-3" />
+                        <div>{searchCustomerError}</div>
+                      </div>
+                    )}
 
-            <div className="bg-white rounded-lg overflow-hidden">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Customers
-                      </th>
-                      {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer Name
+                    {isCustomerSearchActive && foundCustomer ? (
+                      <div className="mt-4">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Search Result:</h3>
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Username
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Customer Name
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Location
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Mobile Number
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Email
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            <tr className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                {foundCustomer.username}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                {foundCustomer.customerName}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                {foundCustomer.location}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                {`${foundCustomer.mobileNumber}`}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                {foundCustomer.email}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex items-center justify-end space-x-2">
+                                <button
+                                  onClick={() => handleEditCustomer(foundCustomer)}
+                                  className="text-blue-600 hover:text-blue-900 inline-flex items-center"
+                                  title="Edit Customer"
+                                >
+                                  <Edit className="h-4 w-4 mr-1" /> Edit
+                                </button>
+                                {/* DELETE BUTTON FOR CUSTOMER (TRASH2 ICON) */}
+                                <button
+                                  onClick={() => handleDeleteClick(foundCustomer.username, 'customer', foundCustomer.customerName)}
+                                  className="text-red-600 hover:text-red-900 inline-flex items-center"
+                                  title="Delete Customer"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-1" /> Delete
+                                </button>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      !isCustomerSearchActive && (
+                        <div className="mt-4">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">All Customers:</h3>
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Username
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Customer Name
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Location
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Mobile Number
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Email
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Actions
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {customers.map((customer, index) => (
+                                <tr key={index} className="hover:bg-gray-50">
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    {customer.username}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    {customer.customerName}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    {customer.location}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    {`${customer.mobileNumber}`}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    {customer.email}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex items-center justify-end space-x-2">
+                                    <button
+                                      onClick={() => handleEditCustomer(customer)}
+                                      className="text-blue-600 hover:text-blue-900 inline-flex items-center"
+                                      title="Edit Customer"
+                                    >
+                                      <Edit className="h-4 w-4 mr-1" /> Edit
+                                    </button>
+                                    {/* DELETE BUTTON FOR CUSTOMER (TRASH2 ICON) */}
+                                    <button
+                                      onClick={() => handleDeleteClick(customer.username, 'customer', customer.customerName)}
+                                      className="text-red-600 hover:text-red-900 inline-flex items-center"
+                                      title="Delete Customer"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-1" /> Delete
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )
+                    )}
+                  </>
+                )}
+              </div>
+            )}
 
-                      </th>
+            {activeTab === "provider" && (
+              <>
+                {providerToUpdate ? (
+                  <UpdateProvider
+                    provider={providerToUpdate}
+                    onUpdateSuccess={handleProviderUpdateSuccess}
+                    onCancel={handleProviderUpdateCancel}
+                  />
+                ) : (
+                  <>
+                    <SearchProvider
+                      onProviderFound={handleProviderFound}
+                      onSearchError={setSearchProviderError}
+                      onSearchActiveChange={handleProviderSearchActiveChange}
+                    />
 
+                    {searchProviderError && (
+                      <div className="flex items-center p-3 mb-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
+                        <AlertTriangle className="flex-shrink-0 inline w-4 h-4 mr-3" />
+                        <div>{searchProviderError}</div>
+                      </div>
+                    )}
 
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer Location
+                    {isProviderSearchActive && foundProvider ? (
+                      <div className="mt-4">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Search Result:</h3>
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Username
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Provider Name
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Location
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Mobile Number
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Email
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Experience
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            <tr className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                {foundProvider.username}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                {foundProvider.providerName}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                {foundProvider.location}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                {`${foundProvider.mobileNumber}`}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                {foundProvider.email}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                {foundProvider.experience}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex items-center justify-end space-x-2">
+                                <button
+                                  onClick={() => handleEditProvider(foundProvider)}
+                                  className="text-blue-600 hover:text-blue-900 inline-flex items-center"
+                                  title="Edit Provider"
+                                >
+                                  <Edit className="h-4 w-4 mr-1" /> Edit
+                                </button>
+                                {/* DELETE BUTTON FOR PROVIDER (TRASH2 ICON) */}
+                                <button
+                                  onClick={() => handleDeleteClick(foundProvider.username, 'provider', foundProvider.providerName)}
+                                  className="text-red-600 hover:text-red-900 inline-flex items-center"
+                                  title="Delete Provider"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-1" /> Delete
+                                </button>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      !isProviderSearchActive && (
+                        <div className="bg-white rounded-lg overflow-hidden">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">All Providers:</h3>
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Username
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Provider Name
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Location
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Mobile Number
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Email
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Experience
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Actions
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {providers.map((provider, index) => (
+                                <tr key={index} className="hover:bg-gray-50">
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    {provider.username}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    {provider.providerName}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    {provider.location}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    {`${provider.mobileNumber}`}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    {provider.email}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    {provider.experience}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex items-center justify-end space-x-2">
+                                    <button
+                                      onClick={() => handleEditProvider(provider)}
+                                      className="text-blue-600 hover:text-blue-900 inline-flex items-center"
+                                      title="Edit Provider"
+                                    >
+                                      <Edit className="h-4 w-4 mr-1" /> Edit
+                                    </button>
+                                    {/* DELETE BUTTON FOR PROVIDER (TRASH2 ICON) */}
+                                    <button
+                                      onClick={() => handleDeleteClick(provider.username, 'provider', provider.providerName)}
+                                      className="text-red-600 hover:text-red-900 inline-flex items-center"
+                                      title="Delete Provider"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-1" /> Delete
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )
+                    )}
+                  </>
+                )}
+              </>
+            )}
 
-                      </th> */}
-                    </tr>
+            {/* Create Customer Tab Content */}
+            {activeTab === "create-customer" && (
+              <CreateCustomer
+                onCustomerCreated={handleNewCustomerCreated}
+                onCancel={handleCreateCustomerCancel}
+              />
+            )}
 
-                  </thead>
-                  
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {customers.map((customer) => (
-                      <tr  className="hover:bg-gray-50">
-    
-                        {/* <td className="px-6 py-4 whitespace-nowrap">
-          
-                          {customer.username}
-                        </td> */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {customer.customerName}
-                        </td>
+            {/* Create Provider Tab Content */}
+            {activeTab === "create-provider" && (
+              <CreateProvider
+                onProviderCreated={handleNewProviderCreated}
+                onCancel={handleCreateProviderCancel}
+              />
+            )}
 
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {customer.location}
-                        </td>
-
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {`${customer.mobileNumber}`}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {customer.email}
-                        </td>
-
-
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div></>
-          
-          )}
-
-
-
-          {activeTab === "provider" && (
-            <>
-
-            <div className="bg-white rounded-lg overflow-hidden">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Providers
-                      </th>
-                   
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {providers.map((provider) => (
-                      <tr  className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {provider.username}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {provider.providerName}
-                        </td>
-
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {provider.location}
-                        </td>
-
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {`${provider.mobileNumber}`}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {provider.email}
-                        </td>
-
-                    
-
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {provider.experience}
-                        </td>
-                       
-                    
-
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div></>
-          )}
-
-
+            {/* NEW: Create Service Tab Content */}
+            {activeTab === "create-service" && (
+              <CreateService
+                onServiceCreated={handleNewServiceCreated}
+                onCancel={handleCreateServiceCancel}
+              />
+            )}
+          </div>
         </div>
+
+        {/* Delete Confirmation Modal (This is rendered conditionally based on `showDeleteConfirmation` state) */}
+        {itemToDelete && ( // Only render the modal if there's an item selected for deletion
+          <DeleteConfirmationModal
+            isOpen={showDeleteConfirmation}
+            message={`Are you sure you want to delete ${itemToDelete.name} (${itemToDelete.username})? This action cannot be undone.`}
+            onConfirm={handleConfirmDelete} // This links to the actual deletion logic in AdminDashboard
+            onCancel={handleCancelDelete} // This handles closing the modal if user cancels
+            loading={isDeleting} // Passes the loading state to show spinner in the modal
+          />
+        )}
       </div>
     </div>
-    </div >
   );
 };
 
