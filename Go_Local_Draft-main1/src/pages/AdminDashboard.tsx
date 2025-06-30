@@ -11,13 +11,14 @@ import {
   Eye,
   Globe,
   PieChart,
-  Plus, // Make sure Plus icon is imported
+  Plus,
   Search,
   Settings,
   Shield,
   Star,
   Trash2,
   TrendingUp,
+  CalendarCheck, // NEW: Import CalendarCheck icon for bookings
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import CreateCustomer from "../components/CreateCustomer";
@@ -27,9 +28,11 @@ import SearchProvider from "../components/SearchProvider";
 import UpdateCustomer from "../components/UpdateCustomer";
 import UpdateProvider from "../components/UpdateProvider";
 import DeleteConfirmationModal from "../components/DeleteConfirmation";
-import CreateService from "../components/CreateServices"; // NEW: Import CreateService
+import CreateService from "../components/CreateServices";
+import SearchService from "../components/SearchService"; // Import SearchService
+import BookingsTab from "../components/BookingsTab"; // NEW: Import BookingsTab
 
-import { Customer, Provider, Services } from "../components/exportTypes"; // NEW: Import Services type
+import { Customer, Provider, Services, Booking } from "../components/exportTypes"; // NEW: Import Booking type
 
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState("customer");
@@ -48,6 +51,13 @@ const AdminDashboard: React.FC = () => {
   const [foundProvider, setFoundProvider] = useState<Provider | null>(null);
   const [searchProviderError, setSearchProviderError] = useState<string | null>(null);
   const [isProviderSearchActive, setIsProviderSearchActive] = useState<boolean>(false);
+
+  // States for service search and all services display
+  const [foundService, setFoundService] = useState<Services | null>(null);
+  const [searchServiceError, setSearchServiceError] = useState<string | null>(null);
+  const [isServiceSearchActive, setIsServiceSearchActive] = useState<boolean>(false);
+  const [allServices, setAllServices] = useState<Services[]>([]);
+
 
   // State for customer update
   const [customerToUpdate, setCustomerToUpdate] = useState<Customer | null>(null);
@@ -112,12 +122,11 @@ const AdminDashboard: React.FC = () => {
     fetchAllCustomers();
   }, [isCustomerSearchActive, activeTab, customerToUpdate]);
 
-  console.log("Current Customers:", customers);
 
   // Fetch all providers only if no provider search is active AND not in update mode
   useEffect(() => {
     const fetchAllProviders = async () => {
-      if (!isProviderSearchActive && !providerToUpdate) {
+      if (!isProviderSearchActive && activeTab === "provider" && !providerToUpdate) {
         try {
           const prores = await axios.get<Provider[]>(
             'http://localhost:8080/api/admin/get-providers',
@@ -136,9 +145,36 @@ const AdminDashboard: React.FC = () => {
       }
     };
     fetchAllProviders();
-  }, [isProviderSearchActive, providerToUpdate]);
+  }, [isProviderSearchActive, activeTab, providerToUpdate]);
 
-  console.log("Current Providers:", providers);
+
+  // Fetch all services when the service tab is active and no search is ongoing
+  useEffect(() => {
+    const fetchAllServices = async () => {
+      if (activeTab === "service" && !isServiceSearchActive) {
+        try {
+          const serviceRes = await axios.get<Services[]>(
+            'http://localhost:8080/api/admin/get-service',
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+          console.log("All Services:", serviceRes.data);
+          setAllServices(serviceRes.data);
+          setError(null);
+        } catch (err: any) {
+          console.error("Error fetching all services:", err);
+          const errorMessage = err.response?.data?.message || err.message || "Failed to fetch all services.";
+          setError(errorMessage);
+          setAllServices([]);
+        }
+      }
+    };
+    fetchAllServices();
+  }, [activeTab, isServiceSearchActive]);
 
   const [loading, setLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState("All Roles");
@@ -154,7 +190,7 @@ const AdminDashboard: React.FC = () => {
     setCustomerToUpdate(null);
     setSuccess(`Customer '${newCustomer.customerName}' created successfully!`);
     setTimeout(() => setSuccess(null), 3000);
-    setError(null); // Clear any error messages from previous attempts
+    setError(null);
   };
 
   const handleCreateCustomerCancel = () => {
@@ -173,7 +209,7 @@ const AdminDashboard: React.FC = () => {
     setProviderToUpdate(null);
     setSuccess(`Provider '${newProvider.providerName}' created successfully!`);
     setTimeout(() => setSuccess(null), 3000);
-    setError(null); // Clear any error messages from previous attempts
+    setError(null);
   };
 
   const handleCreateProviderCancel = () => {
@@ -182,18 +218,19 @@ const AdminDashboard: React.FC = () => {
     setSuccess(null);
   };
 
-  // NEW: Callback function to handle new service creation
+  // Callback function to handle new service creation
   const handleNewServiceCreated = (newService: Services) => {
-    // If you had a list of services to display, you would update that state here.
-    // For now, we'll just show a success message and switch back to a relevant tab.
-    setActiveTab("create-service"); // Stay on create tab, or switch to 'customer' or 'provider' if preferred
+    setAllServices(prevServices => [...prevServices, newService]); // Add to the list of all services
+    setActiveTab("service"); // Switch to the services list after creation
+    setFoundService(null);
+    setIsServiceSearchActive(false);
     setSuccess(`Service '${newService.serviceName}' (ID: ${newService.serviceId}) created successfully!`);
     setTimeout(() => setSuccess(null), 3000);
-    setError(null); // Clear any error messages from previous attempts
+    setError(null);
   };
 
   const handleCreateServiceCancel = () => {
-    setActiveTab("customer"); // Or 'provider' or keep on 'create-service'
+    setActiveTab("service");
     setError(null);
     setSuccess(null);
   };
@@ -204,16 +241,16 @@ const AdminDashboard: React.FC = () => {
     setFoundCustomer(customer);
     setSearchCustomerError(null);
     setCustomerToUpdate(null);
-    setError(null); // Clear general error
-    setSuccess(null); // Clear general success
+    setError(null);
+    setSuccess(null);
   };
 
   const handleCustomerSearchError = (error: string | null) => {
     setSearchCustomerError(error);
     setFoundCustomer(null);
     setCustomerToUpdate(null);
-    setError(null); // Clear general error
-    setSuccess(null); // Clear general success
+    setError(null);
+    setSuccess(null);
   };
 
   const handleCustomerSearchActiveChange = (isActive: boolean) => {
@@ -230,16 +267,16 @@ const AdminDashboard: React.FC = () => {
     setFoundProvider(provider);
     setSearchProviderError(null);
     setProviderToUpdate(null);
-    setError(null); // Clear general error
-    setSuccess(null); // Clear general success
+    setError(null);
+    setSuccess(null);
   };
 
   const handleProviderSearchError = (error: string | null) => {
     setSearchProviderError(error);
     setFoundProvider(null);
     setProviderToUpdate(null);
-    setError(null); // Clear general error
-    setSuccess(null); // Clear general success
+    setError(null);
+    setSuccess(null);
   };
 
   const handleProviderSearchActiveChange = (isActive: boolean) => {
@@ -250,6 +287,41 @@ const AdminDashboard: React.FC = () => {
     }
   };
   // --- End SearchProvider Callbacks ---
+
+  // --- SearchService Callbacks ---
+  const handleServiceFound = (service: Services | null) => {
+    setFoundService(service);
+    setSearchServiceError(null);
+    setIsServiceSearchActive(true); // Set to true when a search result is displayed
+    setError(null);
+    setSuccess(null);
+  };
+
+  const handleServiceSearchError = (error: string | null) => {
+    setSearchServiceError(error);
+    setFoundService(null);
+    setIsServiceSearchActive(true); // Still in "search active" mode if an error occurred during search
+    setError(null);
+    setSuccess(null);
+  };
+
+  const handleServiceSearchActiveChange = (isActive: boolean) => {
+    setIsServiceSearchActive(isActive);
+    if (!isActive) {
+      setFoundService(null);
+      setSearchServiceError(null);
+      // No explicit re-fetch here, as the useEffect for allServices handles it based on isServiceSearchActive
+    }
+  };
+
+  const handleClearServiceSearch = () => {
+    setFoundService(null);
+    setSearchServiceError(null);
+    setIsServiceSearchActive(false); // Set to false to trigger fetching all services
+    setError(null);
+    setSuccess(null);
+  };
+  // --- End SearchService Callbacks ---
 
   // --- UpdateCustomer Callbacks ---
   const handleEditCustomer = (customer: Customer) => {
@@ -385,7 +457,11 @@ const AdminDashboard: React.FC = () => {
         return "bg-green-100 text-green-800";
       case "pending":
         return "bg-yellow-100 text-yellow-800";
-      case "suspended":
+      case "confirmed":
+        return "bg-blue-100 text-blue-800";
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "cancelled":
         return "bg-red-100 text-red-800";
       case "info":
         return "bg-blue-100 text-blue-800";
@@ -456,9 +532,11 @@ const AdminDashboard: React.FC = () => {
               {[
                 { id: "customer", label: "Customer", icon: Activity },
                 { id: "provider", label: "Provider", icon: BarChart3 },
+                { id: "service", label: "Service", icon: Settings },
+                { id: "bookings", label: "Bookings", icon: CalendarCheck }, // NEW: Tab for Bookings
                 { id: "create-customer", label: "Create Customer", icon: Plus },
                 { id: "create-provider", label: "Create Provider", icon: Plus },
-                { id: "create-service", label: "Create Service", icon: Plus } // NEW: Tab for Create Service
+                { id: "create-service", label: "Create Service", icon: Plus }
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -566,7 +644,6 @@ const AdminDashboard: React.FC = () => {
                                 >
                                   <Edit className="h-4 w-4 mr-1" /> Edit
                                 </button>
-                                {/* DELETE BUTTON FOR CUSTOMER (TRASH2 ICON) */}
                                 <button
                                   onClick={() => handleDeleteClick(foundCustomer.username, 'customer', foundCustomer.customerName)}
                                   className="text-red-600 hover:text-red-900 inline-flex items-center"
@@ -632,7 +709,6 @@ const AdminDashboard: React.FC = () => {
                                     >
                                       <Edit className="h-4 w-4 mr-1" /> Edit
                                     </button>
-                                    {/* DELETE BUTTON FOR CUSTOMER (TRASH2 ICON) */}
                                     <button
                                       onClick={() => handleDeleteClick(customer.username, 'customer', customer.customerName)}
                                       className="text-red-600 hover:text-red-900 inline-flex items-center"
@@ -733,7 +809,6 @@ const AdminDashboard: React.FC = () => {
                                 >
                                   <Edit className="h-4 w-4 mr-1" /> Edit
                                 </button>
-                                {/* DELETE BUTTON FOR PROVIDER (TRASH2 ICON) */}
                                 <button
                                   onClick={() => handleDeleteClick(foundProvider.username, 'provider', foundProvider.providerName)}
                                   className="text-red-600 hover:text-red-900 inline-flex items-center"
@@ -805,7 +880,6 @@ const AdminDashboard: React.FC = () => {
                                     >
                                       <Edit className="h-4 w-4 mr-1" /> Edit
                                     </button>
-                                    {/* DELETE BUTTON FOR PROVIDER (TRASH2 ICON) */}
                                     <button
                                       onClick={() => handleDeleteClick(provider.username, 'provider', provider.providerName)}
                                       className="text-red-600 hover:text-red-900 inline-flex items-center"
@@ -826,6 +900,109 @@ const AdminDashboard: React.FC = () => {
               </>
             )}
 
+            {/* Service Tab Content */}
+            {activeTab === "service" && (
+              <div className="bg-white rounded-lg overflow-hidden">
+                <SearchService
+                  onServiceFound={handleServiceFound}
+                  onSearchError={handleServiceSearchError}
+                  onSearchActiveChange={handleServiceSearchActiveChange}
+                  onClearSearch={handleClearServiceSearch}
+                />
+
+                {searchServiceError && (
+                  <div className="flex items-center p-3 mt-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
+                    <AlertTriangle className="flex-shrink-0 inline w-4 h-4 mr-3" />
+                    <div>{searchServiceError}</div>
+                  </div>
+                )}
+
+                {isServiceSearchActive && foundService ? (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Search Result:</h3>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Service ID
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Service Name
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              No. of Users
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          <tr className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {foundService.serviceId}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {foundService.serviceName}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {foundService.noOfUser}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ) : (
+                  !isServiceSearchActive && ( // Display all services only if no search is active
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">All Available Services:</h3>
+                      {allServices.length > 0 ? (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Service ID
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Service Name
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  No. of Users
+                                </th>
+                                {/* Add more headers if needed (e.g., actions for services) */}
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {allServices.map((service, index) => (
+                                <tr key={index} className="hover:bg-gray-50">
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    {service.serviceId}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    {service.serviceName}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    {service.noOfUser}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        !searchServiceError && <p className="text-gray-600">No services available.</p>
+                      )}
+                    </div>
+                  )
+                )}
+              </div>
+            )}
+
+            {/* NEW: Bookings Tab Content */}
+            {activeTab === "bookings" && (
+              <BookingsTab />
+            )}
+
             {/* Create Customer Tab Content */}
             {activeTab === "create-customer" && (
               <CreateCustomer
@@ -842,7 +1019,7 @@ const AdminDashboard: React.FC = () => {
               />
             )}
 
-            {/* NEW: Create Service Tab Content */}
+            {/* Create Service Tab Content */}
             {activeTab === "create-service" && (
               <CreateService
                 onServiceCreated={handleNewServiceCreated}
