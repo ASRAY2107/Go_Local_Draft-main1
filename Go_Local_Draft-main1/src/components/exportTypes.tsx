@@ -47,3 +47,20 @@ export interface ServiceType {
     serviceName: string;
     // Add other fields if a service has more properties like 'description', 'price', etc.
   }
+
+  export interface Booking {
+    bookingId: string;
+    provider: {
+      username: string;
+      providerName: string;
+    };
+    customer: {
+      username: string;
+      customerName: string;
+    };
+    location: string;
+    dateTime: string;
+    amountPaid: number;
+    typeOfJob: string;
+    status: string;
+  }
