@@ -1,37 +1,93 @@
 // src/components/UpdateProvider.tsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Provider, Services } from './exportTypes'; // Import both Provider and Services types
+import { Provider, Services } from './exportTypes';
 import { AlertTriangle, CheckCircle, Edit, Save, XCircle } from 'lucide-react';
 
 interface UpdateProviderProps {
-  provider: Provider; // The provider object to be updated
-  onUpdateSuccess: (updatedProvider: Provider) => void; // Callback after successful update
-  onCancel: () => void; // Callback for when the user cancels
+  provider: Provider;
+  onUpdateSuccess: (updatedProvider: Provider) => void;
+  onCancel: () => void;
 }
 
 const UpdateProvider: React.FC<UpdateProviderProps> = ({ provider, onUpdateSuccess, onCancel }) => {
-  const [formData, setFormData] = useState<Provider>(provider);
+
+  // UPDATED decodeDescription function
+  const decodeDescription = (descriptionData: Provider['description']): string => {
+    if (typeof descriptionData === 'string') {
+      const base64Regex = /^[A-Za-z0-9+/=]+$/;
+      if (base64Regex.test(descriptionData) && descriptionData.length % 4 === 0) {
+        try {
+          return atob(descriptionData);
+        } catch (e) {
+          console.warn("Failed to decode description as base64, treating as plain string:", e);
+          return descriptionData;
+        }
+      }
+      return descriptionData;
+    }
+
+    if (descriptionData instanceof ArrayBuffer) {
+      try {
+        return new TextDecoder('utf-8').decode(new Uint8Array(descriptionData));
+      } catch (e) {
+        console.error("Error decoding ArrayBuffer description:", e);
+        return "Decoding Error (ArrayBuffer)";
+      }
+    }
+
+    if (typeof descriptionData === 'object' && descriptionData !== null && 'data' in descriptionData && Array.isArray((descriptionData as any).data)) {
+      try {
+        return new TextDecoder('utf-8').decode(new Uint8Array((descriptionData as any).data));
+      } catch (e) {
+        console.error("Error decoding byte array description:", e);
+        return "Decoding Error (Byte Array)";
+      }
+    }
+
+    if (descriptionData instanceof Blob) {
+      console.warn("Description is a Blob. Cannot synchronously decode for initial state.");
+      return "Loading Description...";
+    }
+
+    console.warn("Unexpected description type:", typeof descriptionData, descriptionData);
+    return "Unknown Description Format";
+  };
+
+  const [formData, setFormData] = useState<Provider>(() => {
+    // Ensure initial state correctly decodes description
+    return {
+      ...provider,
+      description: decodeDescription(provider.description)
+    };
+  });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [profilePictureFile, setProfilePictureFile] = useState<File | null>(null);
 
   useEffect(() => {
-    setFormData(provider);
-    setProfilePictureFile(null); // Clear any pending file selection
+    // This useEffect ensures the form resets and populates correctly
+    // when a new provider is selected (if this component is reused)
+    setFormData({
+      ...provider,
+      description: decodeDescription(provider.description)
+    });
+    setProfilePictureFile(null); // Clear any previously selected file
     setError(null);
     setSuccess(null);
-  }, [provider]);
+  }, [provider]); // Dependency array: re-run if 'provider' prop changes
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-    setError(null);
-    setSuccess(null);
+    setError(null); // Clear errors on input change
+    setSuccess(null); // Clear success message on input change
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,34 +99,65 @@ const UpdateProvider: React.FC<UpdateProviderProps> = ({ provider, onUpdateSucce
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setSuccess(null);
+    setLoading(true); // Start loading immediately
+    setError(null); // Clear previous errors
+    setSuccess(null); // Clear previous success messages
 
-    // Basic validation for required fields
-    if (
-      !formData.providerName ||
-      !formData.location ||
-      !formData.mobileNumber ||
-      !formData.email ||
-      !formData.rating ||
-      !formData.experience ||
-      !formData.description
-    ) {
-      setError("Provider Name, Location, Mobile Number, Email, Rating, Experience, and Description are required.");
-      setLoading(false);
-      return;
+    // --- REFINED CLIENT-SIDE VALIDATION ---
+    const validationErrors: string[] = [];
+
+    // Check for non-empty strings (after trimming whitespace)
+    if (!formData.providerName?.trim()) { // Using optional chaining and nullish coalescing for safety
+      validationErrors.push("Provider Name is required.");
+    }
+    if (!formData.location?.trim()) {
+      validationErrors.push("Location is required.");
+    }
+    // Mobile number validation, ensure it's a string and not empty after trim
+    if (!formData.mobileNumber || String(formData.mobileNumber).trim() === '') {
+      validationErrors.push("Mobile Number is required.");
+    } else if (!/^[0-9]{10,15}$/.test(String(formData.mobileNumber))) { // Re-check pattern
+      validationErrors.push("Mobile number should contain 10-15 digits.");
+    }
+    if (!formData.email?.trim()) {
+      validationErrors.push("Email is required.");
+    }
+    // For numbers, check if it's explicitly null/undefined OR if it's not a finite number
+    // parseFloat handles empty string to NaN, which is good for validation
+    if (formData.rating === null || formData.rating === undefined || isNaN(parseFloat(String(formData.rating)))) {
+        validationErrors.push("Rating is required and must be a number.");
+    } else if (parseFloat(String(formData.rating)) < 0 || parseFloat(String(formData.rating)) > 5) {
+        validationErrors.push("Rating must be between 0 and 5.");
     }
 
-    try {
-      const dataToSend: any = { ...formData };
+    if (formData.experience === null || formData.experience === undefined || isNaN(parseFloat(String(formData.experience)))) {
+        validationErrors.push("Experience is required and must be a number.");
+    } else if (parseFloat(String(formData.experience)) < 0) {
+        validationErrors.push("Experience cannot be negative.");
+    }
 
+    if (!formData.description) {
+      validationErrors.push("Description is required.");
+    }
+
+    if (validationErrors.length > 0) {
+      setError(validationErrors.join(" ")); // Join all errors into one message
+      setLoading(false); // Stop loading if validation fails
+      return;
+    }
+    // --- END REFINED VALIDATION ---
+
+    try {
+      const dataToSend: any = { ...formData }; // Start with a copy of current form data
+
+      // Handle profile picture
       if (profilePictureFile) {
         const reader = new FileReader();
         reader.readAsDataURL(profilePictureFile);
         await new Promise<void>((resolve, reject) => {
           reader.onloadend = () => {
             const base64StringWithPrefix = reader.result as string;
+            // Extract only the base64 part, removing "data:image/jpeg;base64," prefix
             dataToSend.profilePicture = base64StringWithPrefix.split(',')[1];
             resolve();
           };
@@ -81,38 +168,43 @@ const UpdateProvider: React.FC<UpdateProviderProps> = ({ provider, onUpdateSucce
             reject(errorEvent);
           };
         });
-        if (error) return;
+        if (error) return; // If FileReader error occurred, stop submission
       } else {
+        // If no new file is selected, retain the existing profile picture base64 string
         dataToSend.profilePicture = formData.profilePicture;
       }
 
-      // Ensure mobileNumber and rating are sent as strings if your backend expects them that way
+      // Ensure data types are correct for backend (if backend expects strings for numbers)
+      // This is often *not* needed if your backend correctly parses JSON numbers,
+      // but if you're certain it expects strings, keep these.
+      // If your backend expects numbers, remove these String() conversions.
       dataToSend.mobileNumber = String(dataToSend.mobileNumber);
-      dataToSend.rating = String(dataToSend.rating); // Assuming rating can be a numeric string like "4.5"
+      dataToSend.rating = parseFloat(String(dataToSend.rating)); // Send as number if backend expects it
+      dataToSend.experience = parseFloat(String(dataToSend.experience)); // Send as number
+      dataToSend.description = String(formData.description); // Ensure it's sent as a string
 
-      // No direct editing of service fields through text inputs here.
-      // The whole 'service' object will be sent as is.
-      // If you need to change the service, a more complex selection UI would be required.
 
       const response = await axios.put<Provider>(
-        `http://localhost:8080/api/admin/update-provider/${formData.username}`, // Use username for update API
+        `http://localhost:8080/api/admin/update-provider/${formData.username}`,
         dataToSend,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json' // Explicitly set content type
           }
         }
       );
 
       setSuccess(`Provider '${response.data.providerName}' updated successfully!`);
-      onUpdateSuccess(response.data);
+      onUpdateSuccess(response.data); // Notify parent component of success
+      // Consider adding a setTimeout here to clear success message if desired
+      // setTimeout(() => setSuccess(null), 3000);
 
     } catch (err: any) {
-      console.error("Error updating provider:", err);
+      console.error("Error updating provider:", err.response?.data || err.message);
       setError(err.response?.data?.message || err.message || "Failed to update provider. Please try again.");
     } finally {
-      setLoading(false);
+      setLoading(false); // Always set loading to false after attempt
     }
   };
 
@@ -175,7 +267,7 @@ const UpdateProvider: React.FC<UpdateProviderProps> = ({ provider, onUpdateSucce
             Mobile Number <span className="text-red-500">*</span>
           </label>
           <input
-            type="text" // Keep as text to allow flexible input, but validate pattern
+            type="text"
             id="providerMobileNumber"
             name="mobileNumber"
             value={formData.mobileNumber}
@@ -203,21 +295,7 @@ const UpdateProvider: React.FC<UpdateProviderProps> = ({ provider, onUpdateSucce
           />
         </div>
 
-        {/* Rating */}
-        <div>
-          <label htmlFor="providerRating" className="block text-sm font-medium text-gray-700">
-            Rating <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text" // Assuming it can be "4.5", "5 stars" etc. If strictly numeric, change to "number".
-            id="providerRating"
-            name="rating"
-            value={formData.rating}
-            onChange={handleChange}
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            required
-          />
-        </div>
+        
 
         {/* Experience */}
         <div>
@@ -243,7 +321,7 @@ const UpdateProvider: React.FC<UpdateProviderProps> = ({ provider, onUpdateSucce
           <textarea
             id="providerDescription"
             name="description"
-            value={formData.description}
+            value={formData.description as string}
             onChange={handleChange}
             rows={3}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
@@ -266,23 +344,11 @@ const UpdateProvider: React.FC<UpdateProviderProps> = ({ provider, onUpdateSucce
 
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            Number of Bookings
-          </label>
-          <input
-            type="text"
-            value={formData.noOfBookings}
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-100 text-gray-600 cursor-not-allowed sm:text-sm"
-            readOnly
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
             Times Booked
           </label>
           <input
             type="text"
-            value={formData.noOfTimesBooked}
+            value={String(formData.noOfTimesBooked)}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-100 text-gray-600 cursor-not-allowed sm:text-sm"
             readOnly
           />
