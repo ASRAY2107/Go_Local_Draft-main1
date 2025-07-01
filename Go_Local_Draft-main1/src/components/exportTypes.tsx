@@ -12,7 +12,7 @@ export type UserAccount = {
 export type Services = {
     serviceId: string;
     serviceName: string;
-    noOfUser: number;
+    noOfProviders: number;
 };
 
 // Customer type, extending UserAccount
@@ -32,12 +32,12 @@ export type Provider = UserAccount & {
     location: string;
     mobileNumber: string; // Changed from BigInt to string as per your component's formData
     email: string;
-    rating: string;
+    rating?: string;
     profilePicture: string | null; // Base64 string or null
     noOfBookings: number;
     service: Services; // Nested Services object
     experience: number;
-    description: string;
+    description: string | ArrayBuffer | { type: string, data: number[] } | Blob;
     noOfTimesBooked: number;
 };
 

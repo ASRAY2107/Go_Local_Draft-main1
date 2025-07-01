@@ -944,7 +944,7 @@ const AdminDashboard: React.FC = () => {
                               {foundService.serviceName}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              {foundService.noOfUser}
+                              {foundService.noOfProviders}
                             </td>
                           </tr>
                         </tbody>
@@ -982,7 +982,7 @@ const AdminDashboard: React.FC = () => {
                                     {service.serviceName}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap">
-                                    {service.noOfUser}
+                                    {service.noOfProviders}
                                   </td>
                                 </tr>
                               ))}
