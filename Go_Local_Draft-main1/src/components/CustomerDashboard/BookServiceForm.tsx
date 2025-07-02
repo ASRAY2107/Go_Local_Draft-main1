@@ -33,6 +33,11 @@ const BookServiceForm: React.FC<BookServiceFormProps> = ({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log("BookServiceForm - useEffect triggered");
+    console.log("Current user object:", user);
+    console.log("Is Authenticated:", isAuthenticated);
+    console.log("Auth Loading:", authLoading);
+    //console.log("Authentication Token:", token ? `Token available (length: ${token.length})` : "No token available");
     if (initialProviderId !== undefined && initialProviderId !== providerId) {
       setProviderId(initialProviderId);
     }
@@ -59,6 +64,7 @@ const BookServiceForm: React.FC<BookServiceFormProps> = ({
       setError("Customer ID not found. Please ensure you are logged in correctly.");
       return;
     }
+    console.log("Role before API call:", user.role); 
     const customerId = user.username; // Get customerId from authenticated user
 
     setLoading(true);
@@ -66,12 +72,12 @@ const BookServiceForm: React.FC<BookServiceFormProps> = ({
     setSuccessMessage(null);
 
     const [year, month, day] = bookingDate.split('-');
-    const formattedDateTime = `${day}-${month}-${year} ${bookingTime}`;
+    const formattedDateTime = `${year}-${month}-${day} ${bookingTime}`;
 
     const amountFloat = parseFloat(bookingAmount);
 
     // Add validation for typeOfJob
-    if (!providerId || !bookingLocation || !bookingDate  || !bookingAmount || !typeOfJob) {
+    if (!providerId || !bookingLocation || !bookingDate  ||  !bookingAmount || !typeOfJob) {
       setError("All fields are required.");
       setLoading(false);
       return;
@@ -109,8 +115,10 @@ const BookServiceForm: React.FC<BookServiceFormProps> = ({
       setTypeOfJob(""); // Clear typeOfJob after successful submission
 
       onServiceBooked?.();
+      
     } catch (err: any) {
       console.error("Failed to book service:", err);
+      console.log("Role before API call:", user.role); 
       if (axios.isAxiosError(err)) {
         setError(err.response?.data?.message || err.message || "Failed to book service. Please try again.");
       } else {

@@ -1,11 +1,10 @@
 // src/components/ProviderProfileInfo.tsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Provider } from './exportTypes';
 import { User, MapPin, Phone, Mail, Star, Briefcase, TrendingUp, CheckCircle, Edit, Save, XCircle, AlertTriangle } from 'lucide-react';
  
 const API_BASE_URL = 'http://localhost:8080/api'; // Your backend base URL
-
+ 
 interface Provider {
     username: string;
     providerName: string;
@@ -23,50 +22,8 @@ interface Provider {
     noOfBookings: number;
     noOfTimesBooked: number;
 }
-
+ 
 const ProviderProfileInfo: React.FC = () => {
-    // NEW: decodeDescription function from UpdateProvider
-    const decodeDescription = (descriptionData: Provider['description']): string => {
-        if (typeof descriptionData === 'string') {
-            const base64Regex = /^[A-Za-z0-9+/=]+$/;
-            if (base64Regex.test(descriptionData) && descriptionData.length % 4 === 0) {
-                try {
-                    return atob(descriptionData);
-                } catch (e) {
-                    console.warn("Failed to decode description as base64, treating as plain string:", e);
-                    return descriptionData;
-                }
-            }
-            return descriptionData;
-        }
-
-        if (descriptionData instanceof ArrayBuffer) {
-            try {
-                return new TextDecoder('utf-8').decode(new Uint8Array(descriptionData));
-            } catch (e) {
-                console.error("Error decoding ArrayBuffer description:", e);
-                return "Decoding Error (ArrayBuffer)";
-            }
-        }
-
-        if (typeof descriptionData === 'object' && descriptionData !== null && 'data' in descriptionData && Array.isArray((descriptionData as any).data)) {
-            try {
-                return new TextDecoder('utf-8').decode(new Uint8Array((descriptionData as any).data));
-            } catch (e) {
-                console.error("Error decoding byte array description:", e);
-                return "Decoding Error (Byte Array)";
-            }
-        }
-
-        if (descriptionData instanceof Blob) {
-            console.warn("Description is a Blob. Cannot synchronously decode for initial state.");
-            return "Loading Description...";
-        }
-
-        console.warn("Unexpected description type:", typeof descriptionData, descriptionData);
-        return "Unknown Description Format";
-    };
-
     const [providerData, setProviderData] = useState<Provider | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -98,11 +55,7 @@ const ProviderProfileInfo: React.FC = () => {
                         },
                     }
                 );
-
-                // Apply decodeDescription to the fetched description
-                const decodedDescription = decodeDescription(res.data.description);
-                
-                setProviderData({ ...res.data, description: decodedDescription }); // Update providerData with decoded description
+                setProviderData(res.data);
                 setEditedFormData({
                     username: res.data.username,
                     providerName: res.data.providerName,
@@ -111,7 +64,7 @@ const ProviderProfileInfo: React.FC = () => {
                     email: res.data.email,
                     profilePicture: res.data.profilePicture,
                     experience: res.data.experience,
-                    description: decodedDescription, // Initialize edited form data with decoded description
+                    description: res.data.description,
                 });
                 setProfilePictureFile(null);
             } catch (err: any) {
@@ -195,7 +148,7 @@ const ProviderProfileInfo: React.FC = () => {
  
             dataToSend.mobileNumber = parseInt(editedFormData.mobileNumber, 10);
             dataToSend.experience = Number(editedFormData.experience);
-
+ 
             dataToSend.service = providerData?.service;
  
             delete dataToSend.rating;
@@ -222,11 +175,7 @@ const ProviderProfileInfo: React.FC = () => {
                     },
                 }
             );
-            
-            // Apply decodeDescription to the fetched description after update
-            const updatedDecodedDescription = decodeDescription(updatedProviderRes.data.description);
-
-            setProviderData({ ...updatedProviderRes.data, description: updatedDecodedDescription });
+            setProviderData(updatedProviderRes.data);
             setEditedFormData({
                 username: updatedProviderRes.data.username,
                 providerName: updatedProviderRes.data.providerName,
@@ -235,7 +184,7 @@ const ProviderProfileInfo: React.FC = () => {
                 email: updatedProviderRes.data.email,
                 profilePicture: updatedProviderRes.data.profilePicture,
                 experience: updatedProviderRes.data.experience,
-                description: updatedDecodedDescription,
+                description: updatedProviderRes.data.description,
             });
             setProfilePictureFile(null);
  
@@ -271,7 +220,7 @@ const ProviderProfileInfo: React.FC = () => {
                 email: providerData.email,
                 profilePicture: providerData.profilePicture,
                 experience: providerData.experience,
-                description: providerData.description, // Revert to decoded description
+                description: providerData.description,
             });
         }
         setProfilePictureFile(null);
@@ -446,13 +395,13 @@ const ProviderProfileInfo: React.FC = () => {
                     <p className="text-gray-700">{isEditing ? (
                         <textarea
                             name="description"
-                            value={typeof editedFormData.description === 'string' ? editedFormData.description : ''}
+                            value={editedFormData.description || ''}
                             onChange={handleChange}
                             rows={4}
                             className="border border-gray-300 rounded-md w-full p-3 focus:ring-blue-500 focus:border-blue-500"
                             required
                         />
-                    ) : typeof providerData.description === 'string' ? providerData.description : 'No description provided.'}</p>
+                    ) : providerData.description || 'No description provided.'}</p>
                 </div>
  
                 {isEditing && (

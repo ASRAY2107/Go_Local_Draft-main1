@@ -32,13 +32,10 @@ const SignupForm: React.FC<SignupFormProps> = ({ role }) => {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
-    // isDeleted will be handled based on role, don't need in formData for direct input
-    // role will be passed from props
     name: "", // Will be customerName or providerName
     location: "",
     mobileNumber: "", // Keep as string for input and validation
     email: "",
-    // profilePicture is handled via selectedFile/profilePictureBase64
     description: "", // Provider specific
     serviceId: "", // Provider specific, maps to service.id or service.serviceId
     experience: "", // Provider specific, keep as string from input
@@ -54,6 +51,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ role }) => {
           setServices(data || []); // Ensure data is an array
           setServiceError(null);
         } catch (err) {
+          console.error("Failed to fetch service categories:", err); // Added console.error
           setServiceError("Failed to load service categories.");
         } finally {
           setServiceLoading(false);
@@ -61,13 +59,12 @@ const SignupForm: React.FC<SignupFormProps> = ({ role }) => {
       };
       fetchServices();
     }
-    // Cleanup function if needed, though not strictly necessary for this useEffect
     return () => {
-      setServiceError(null); // Clear errors on unmount or role change
+      setServiceError(null);
       setServiceLoading(true);
       setServices([]);
     };
-  }, [role, getAllServices]); // Re-run if role changes or getAllServices changes
+  }, [role, getAllServices]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -114,7 +111,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ role }) => {
     const form = new FormData();
 
     // --- Role-specific FormData construction ---
-    if (role === "ROLE_CUSTOMER") {
+    if (role === "ROLE_CUSTOMER" ) {
       // For customers, append individual fields to FormData directly.
       // Backend RegisterCustomerRequest DTO expects these as direct form parts.
       form.append("username", formData.username);
@@ -148,48 +145,74 @@ const SignupForm: React.FC<SignupFormProps> = ({ role }) => {
         return;
       }
 
-      // Prepare provider-specific data as a JSON object, including common fields,
-      // as backend's @RequestPart("providerRequest") expects a JSON string.
+      // Backend expects a flat set of fields, including the profilePicture as a String,
+      // and mobileNumber/experience as numbers but potentially validated with @NotBlank.
+      // We will send them as numbers in the JSON.
       const providerRequestData = {
         username: formData.username,
         password: formData.password,
+        isDeleted: false, // Send as boolean false in JSON
+        role: role, // Send role as a string, backend should map to enum
         providerName: formData.name, // Use formData.name for providerName
         location: formData.location,
-        mobileNumber: parseInt(formData.mobileNumber), // Convert to number for JSON, as backend DTO expects Long
+        mobileNumber: parseInt(formData.mobileNumber), // Convert to number for JSON
         email: formData.email,
-        isDeleted: false, // Send as boolean false in JSON
-        role: role,
         experience: parseInt(formData.experience), // Convert to number for JSON
         description: formData.description,
         service: {
-          serviceId: service.serviceId, // Make sure these match your ServiceEntity fields (e.g., id, name)
+          serviceId: service.serviceId,
           serviceName: service.serviceName,
         },
-        // profilePicture is handled as a separate MultipartFile, so NOT included in this JSON
+        // --- CHANGE START ---
+        // Profile picture MUST be included in the JSON payload as a Base64 string
+        // because the DTO has `private String profilePicture;` with `@NotBlank`.
+        profilePicture: profilePictureBase64 || "default_provider.png", // Provide a default if no picture
+        // --- CHANGE END ---
       };
 
-      // Append the main provider request data as a JSON string under the key "providerRequest"
-      form.append("providerRequest", JSON.stringify(providerRequestData));
+      // --- CHANGE START ---
+      // Append the provider data directly to FormData as individual fields.
+      // This is because your DTOs extend RegisterRequest and expect a flat structure,
+      // not a nested JSON blob under a key like "providerRequest".
+      // Also, the backend uses @NotBlank on Long and int fields, which suggests
+      // it's trying to parse them as strings before conversion, or the validation
+      // is simply misconfigured on the backend. Sending them as numbers in the JSON
+      // is the correct way for JSON, and if it fails, the backend is truly expecting string.
 
-      // Append the actual File object for profilePicture under the key "profilePicture"
-      // This aligns with backend's @RequestParam(value = "profilePicture", required = false) MultipartFile profilePictureFile
-      if (selectedFile) {
-        form.append("profilePicture", selectedFile); // Append the actual File object
-      } else {
-        // If no file is selected, and backend's @RequestParam is required = false,
-        // sending nothing for this part is fine. If backend expects a default, you might send an empty blob.
-        // For now, we'll send nothing if no file is chosen and it's optional.
-      }
+      form.append("username", providerRequestData.username);
+      form.append("password", providerRequestData.password);
+      form.append("isDeleted", String(providerRequestData.isDeleted)); // Convert boolean to string "true"/"false"
+      form.append("role", providerRequestData.role); // Send enum as string "ROLE_PROVIDER"
+      form.append("providerName", providerRequestData.providerName);
+      form.append("location", providerRequestData.location);
+      // For mobileNumber and experience, send as string to satisfy `@NotBlank` if it applies to the string representation before parsing.
+      // If backend truly expects Long/int from the form field directly, it will parse.
+      // This is the most *flexible* approach when backend DTOs are weirdly annotated.
+      form.append("mobileNumber", String(providerRequestData.mobileNumber)); // Send as string
+      form.append("email", providerRequestData.email);
+      form.append("experience", String(providerRequestData.experience)); // Send as string
+      form.append("description", providerRequestData.description);
+      form.append("profilePicture", providerRequestData.profilePicture); // Send the Base64 string
+
+      // For nested ServiceEntity, backend usually expects its fields directly.
+      // If ServiceEntity has serviceId and serviceName, append them as:
+      form.append("service.serviceId", String(providerRequestData.service.serviceId)); // Assuming serviceId is a number
+      form.append("service.serviceName", providerRequestData.service.serviceName);
+
+      // Remove the separate file append for profilePicture
+      // if (selectedFile) {
+      //   form.append("profilePicture", selectedFile);
+      // }
+      // --- CHANGE END ---
     }
 
     try {
-      console.log("FormData for submission:", form);
-      // You can inspect FormData content in console for debugging (e.g., using a loop)
-      // for (let pair of form.entries()) {
-      //     console.log(pair[0] + ': ' + pair[1]);
-      // }
+      console.log("FormData for submission:");
+      for (let pair of form.entries()) {
+          console.log(pair[0] + ': ', pair[1]);
+      }
 
-      const success = await register(form, role); // Pass FormData and role
+      const success = await register(form, role);
 
       if (success) {
         alert("Registration successful! Welcome to Go Local.");
@@ -199,11 +222,9 @@ const SignupForm: React.FC<SignupFormProps> = ({ role }) => {
           navigate("/provider-dashboard");
         }
       } else {
-        // This else block might not be hit if AuthContext throws error,
-        // but good to keep for cases where register returns false without throwing.
         setError("Registration failed. Please check your details and try again.");
       }
-    } catch (err: any) { // Use 'any' or more specific type if known, e.g., AxiosError
+    } catch (err: any) {
       const errorMsg =
         err.response?.data?.message || "Registration failed due to an unexpected error.";
       console.error("Registration error:", errorMsg);

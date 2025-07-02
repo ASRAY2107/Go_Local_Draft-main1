@@ -3,10 +3,10 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { CheckCircle, XCircle, Clock, Info, Star} from 'lucide-react';
 // import ProviderRatingCustomer from './ProviderRatingCustomer'; // No longer needed as it's merged
-import { Provider } from './exportTypes'; // Ensure this path is correct for your Provider interface
-
+import { Provider } from '../components/exportTypes'; // Ensure this path is correct for your Provider interface
+ 
 const API_BASE_URL = 'http://localhost:8080/api';
-
+ 
 // Interface for Customer as received from the backend
 interface Customer {
     username: string;
@@ -18,14 +18,14 @@ interface Customer {
     profilePicture: string; // Assuming base64 encoded string or URL, not Uint8Array directly
     noOfBookings: number;
 }
-
+ 
 // Interface for ServiceEntity as received from the backend
 interface ServiceEntity {
     serviceId: string;
     serviceName: string;
     noOfProviders: number;
 }
-
+ 
 // Interface for Booking as received from the backend
 interface Booking {
     bookingId: string;
@@ -38,13 +38,13 @@ interface Booking {
     status: 'REQUESTED' | 'PENDING' | 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'REJECTED';
     rating?: any; // Added this to represent the presence of a rating object (or null)
 }
-
+ 
 const ProviderBookingRequests: React.FC = () => {
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const providerUsername = localStorage.getItem('username');
-
+ 
     // State for the Rating Modal
     const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
     const [currentBookingToRate, setCurrentBookingToRate] = useState<Booking | null>(null);
@@ -53,14 +53,14 @@ const ProviderBookingRequests: React.FC = () => {
     const [comment, setComment] = useState('');
     const [submittingRating, setSubmittingRating] = useState(false); // Renamed to avoid conflict
     const [ratingError, setRatingError] = useState<string | null>(null); // Renamed to avoid conflict
-
+ 
     const fetchBookings = async () => {
         if (!providerUsername) {
             setError("Provider username not found. Cannot fetch bookings.");
             setLoading(false);
             return;
         }
-
+ 
         setLoading(true);
         setError(null);
         try {
@@ -81,11 +81,11 @@ const ProviderBookingRequests: React.FC = () => {
             setLoading(false);
         }
     };
-
+ 
     useEffect(() => {
         fetchBookings();
     }, [providerUsername]);
-
+ 
     const handleUpdateBookingStatus = async (bookingId: string, status: 'ACCEPTED' | 'REJECTED' | 'COMPLETED') => {
         setLoading(true);
         setError(null);
@@ -103,7 +103,7 @@ const ProviderBookingRequests: React.FC = () => {
                 setLoading(false);
                 return;
             }
-
+ 
             await axios.put(endpoint, {}, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -119,7 +119,7 @@ const ProviderBookingRequests: React.FC = () => {
             setLoading(false);
         }
     };
-
+ 
     // Handler to open the rating modal and reset its internal state
     const handleRateCustomerClick = (booking: Booking) => {
         setCurrentBookingToRate(booking);
@@ -128,32 +128,32 @@ const ProviderBookingRequests: React.FC = () => {
         setRatingError(null); // Clear any previous rating error
         setIsRatingModalOpen(true);
     };
-
+ 
     // Handler for when the rating is successfully submitted
     const handleRatingSubmit = () => {
         setIsRatingModalOpen(false); // Close the modal
         setCurrentBookingToRate(null); // Clear the booking to rate
         fetchBookings(); // Re-fetch bookings to update the rating status
     };
-
+ 
     // Handler for submitting the rating from the modal
     const handleSubmitRatingFromModal = async (e: React.FormEvent) => {
         e.preventDefault();
         setRatingError(null);
         setSubmittingRating(true);
-
+ 
         if (ratingValue === 0) {
             setRatingError("Please select a rating.");
             setSubmittingRating(false);
             return;
         }
-
+ 
         if (!currentBookingToRate) {
             setRatingError("No booking selected for rating.");
             setSubmittingRating(false);
             return;
         }
-
+ 
         try {
             const providerUsername = localStorage.getItem('username');
             if (!providerUsername) {
@@ -161,7 +161,7 @@ const ProviderBookingRequests: React.FC = () => {
                 setSubmittingRating(false);
                 return;
             }
-
+ 
             // Backend endpoint: /api/provider/rate-customer/{providerId}/{bookingId}/{ratingValue}
             // Note: Your current backend endpoint does NOT accept a 'comment' in the request body.
             // If you need to send a comment, you'll need to modify your backend DTO and controller.
@@ -174,7 +174,7 @@ const ProviderBookingRequests: React.FC = () => {
                     },
                 }
             );
-
+ 
             alert('Rating submitted successfully!');
             handleRatingSubmit(); // Calls the parent's onRatingSubmit logic
         } catch (err: any) {
@@ -184,24 +184,24 @@ const ProviderBookingRequests: React.FC = () => {
             setSubmittingRating(false);
         }
     };
-
-
+ 
+ 
     if (loading && !bookings.length) {
         return <div className="text-center text-gray-600 p-8 flex items-center justify-center"><Clock className="mr-2 h-5 w-5 animate-spin"/> Loading booking requests...</div>;
     }
-
+ 
     if (error) {
         return <div className="text-center text-red-600 p-8 flex items-center justify-center"><Clock className="mr-2 h-5 w-5"/> {error}</div>;
     }
-
+ 
     if (bookings.length === 0) {
         return <div className="text-center text-gray-600 p-8 flex items-center justify-center"><Info className="mr-2 h-5 w-5"/> No booking requests found.</div>;
     }
-
+ 
     return (
         <div className="bg-white rounded-xl p-6 shadow-md">
             <h3 className="text-2xl font-bold text-gray-900 mb-6">Your Booking Requests</h3>
-
+ 
             <div className="space-y-4">
                 {bookings.map((booking) => (
                     <div key={booking.bookingId} className="border border-gray-200 rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center">
@@ -263,7 +263,7 @@ const ProviderBookingRequests: React.FC = () => {
                     </div>
                 ))}
             </div>
-
+ 
             {/* --- Start of Merged ProviderRatingCustomer Component --- */}
             {isRatingModalOpen && currentBookingToRate && (
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
@@ -272,9 +272,9 @@ const ProviderBookingRequests: React.FC = () => {
                             <XCircle className="h-6 w-6" />
                         </button>
                         <h2 className="text-xl font-bold mb-4 text-gray-800">Rate Customer: {currentBookingToRate.customer.customerName}</h2>
-
+ 
                         {ratingError && <p className="text-red-500 text-sm mb-4">{ratingError}</p>}
-
+ 
                         <form onSubmit={handleSubmitRatingFromModal} className="space-y-4">
                             <div>
                                 <label className="block text-gray-700 text-sm font-semibold mb-2">Rating:</label>
@@ -320,5 +320,5 @@ const ProviderBookingRequests: React.FC = () => {
         </div>
     );
 };
-
+ 
 export default ProviderBookingRequests;

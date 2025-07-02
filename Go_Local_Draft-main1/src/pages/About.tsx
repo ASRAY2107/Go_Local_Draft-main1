@@ -4,19 +4,27 @@ import { Mail, Phone, MapPin, Users, Target, Heart, Award, Globe, Shield } from 
 const About: React.FC = () => {
   const teamMembers = [
     {
-      name: 'Arjun Sharma',
-      role: 'CEO & Founder',
+      name: 'Kashish Barnwal',
       image: 'https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=300',
       description: 'Passionate about connecting communities and supporting local businesses.'
     },
     {
-      name: 'Priya Patel',
-      role: 'Head of Operations',
+      name: 'Sri Gayathri K',
       image: 'https://images.pexels.com/photos/3184454/pexels-photo-3184454.jpeg?auto=compress&cs=tinysrgb&w=300',
       description: 'Ensures smooth operations and exceptional customer experiences.'
     },
     {
-      name: 'Rajesh Kumar',
+      name: 'Asray Kumar',
+      image: 'https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=300',
+      description: 'Building the technology that powers our platform and community.'
+    },
+    {
+      name: 'Manav Sahay',
+      image: 'https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=300',
+      description: 'Building the technology that powers our platform and community.'
+    },
+    {
+      name: 'Sai Kamalesh',
       role: 'Lead Developer',
       image: 'https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=300',
       description: 'Building the technology that powers our platform and community.'
