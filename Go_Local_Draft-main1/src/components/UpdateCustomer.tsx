@@ -50,12 +50,31 @@ const UpdateCustomer: React.FC<UpdateCustomerProps> = ({ customer, onUpdateSucce
     setSuccess(null);
 
     // Basic validation
-    if (!formData.customerName || !formData.location || !formData.mobileNumber || !formData.email) {
-      setError("Customer Name, Location, Mobile Number, and Email are required.");
-      setLoading(false);
-      return;
+    const validationErrors: string[] = [];
+
+    // Check for non-empty strings (after trimming whitespace)
+    if (!formData.customerName?.trim()) { // Using optional chaining and nullish coalescing for safety
+      validationErrors.push("Provider Name is required.");
+    }
+    if (!formData.location?.trim()) {
+      validationErrors.push("Location is required.");
+    }
+    // Mobile number validation, ensure it's a string and not empty after trim
+    if (!formData.mobileNumber || String(formData.mobileNumber).trim() === '') {
+      validationErrors.push("Mobile Number is required.");
+    } else if (!/^[0-9]{10,15}$/.test(String(formData.mobileNumber))) { // Re-check pattern
+      validationErrors.push("Mobile number should contain 10-15 digits.");
+    }
+    if (!formData.email?.trim()) {
+      validationErrors.push("Email is required.");
     }
 
+    
+    if (validationErrors.length > 0) {
+      setError(validationErrors.join(" ")); // Join all errors into one message
+      setLoading(false); // Stop loading if validation fails
+      return;
+    }
     try {
       const dataToSend: any = { ...formData }; // Start with current form data
 

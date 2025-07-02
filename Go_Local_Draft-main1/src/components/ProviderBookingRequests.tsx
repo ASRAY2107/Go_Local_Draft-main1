@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { CheckCircle, XCircle, Clock, Info, Star} from 'lucide-react';
 // import ProviderRatingCustomer from './ProviderRatingCustomer'; // No longer needed as it's merged
-import { Provider } from '../pages/AdminDashboard'; // Ensure this path is correct for your Provider interface
+import { Provider } from './exportTypes'; // Ensure this path is correct for your Provider interface
 
 const API_BASE_URL = 'http://localhost:8080/api';
 

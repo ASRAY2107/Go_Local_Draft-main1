@@ -729,7 +729,7 @@ const AdminDashboard: React.FC = () => {
               </div>
             )}
 
-            {activeTab === "provider" && (
+{activeTab === "provider" && (
               <>
                 {providerToUpdate ? (
                   <UpdateProvider
@@ -753,7 +753,7 @@ const AdminDashboard: React.FC = () => {
                     )}
 
                     {isProviderSearchActive && foundProvider ? (
-                      <div className="mt-4">
+                      <div className="mt-4 overflow-x-auto">
                         <h3 className="text-lg font-semibold text-gray-900 mb-2">Search Result:</h3>
                         <table className="min-w-full divide-y divide-gray-200">
                           <thead className="bg-gray-50">
@@ -775,6 +775,9 @@ const AdminDashboard: React.FC = () => {
                               </th>
                               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Experience
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Service Provided
                               </th>
                               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Actions
@@ -801,6 +804,9 @@ const AdminDashboard: React.FC = () => {
                               <td className="px-6 py-4 whitespace-nowrap">
                                 {foundProvider.experience}
                               </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                {foundProvider.service.serviceName}
+                              </td>
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex items-center justify-end space-x-2">
                                 <button
                                   onClick={() => handleEditProvider(foundProvider)}
@@ -825,73 +831,81 @@ const AdminDashboard: React.FC = () => {
                       !isProviderSearchActive && (
                         <div className="bg-white rounded-lg overflow-hidden">
                           <h3 className="text-lg font-semibold text-gray-900 mb-2">All Providers:</h3>
-                          <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                              <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Username
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Provider Name
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Location
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Mobile Number
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Email
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Experience
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Actions
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                              {providers.map((provider, index) => (
-                                <tr key={index} className="hover:bg-gray-50">
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    {provider.username}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    {provider.providerName}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    {provider.location}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    {`${provider.mobileNumber}`}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    {provider.email}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    {provider.experience}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex items-center justify-end space-x-2">
-                                    <button
-                                      onClick={() => handleEditProvider(provider)}
-                                      className="text-blue-600 hover:text-blue-900 inline-flex items-center"
-                                      title="Edit Provider"
-                                    >
-                                      <Edit className="h-4 w-4 mr-1" /> Edit
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteClick(provider.username, 'provider', provider.providerName)}
-                                      className="text-red-600 hover:text-red-900 inline-flex items-center"
-                                      title="Delete Provider"
-                                    >
-                                      <Trash2 className="h-4 w-4 mr-1" /> Delete
-                                    </button>
-                                  </td>
+                          <div className="overflow-x-auto"> {/* Added this div for scrollbar */}
+                            <table className="min-w-full divide-y divide-gray-200">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Username
+                                  </th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Provider Name
+                                  </th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Location
+                                  </th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Mobile Number
+                                  </th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Email
+                                  </th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Experience
+                                  </th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Service Provided
+                                  </th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions
+                                  </th>
                                 </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                              </thead>
+                              <tbody className="bg-white divide-y divide-gray-200">
+                                {providers.map((provider, index) => (
+                                  <tr key={index} className="hover:bg-gray-50">
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                      {provider.username}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                      {provider.providerName}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                      {provider.location}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                      {`${provider.mobileNumber}`}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                      {provider.email}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                      {provider.experience}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                      {provider.service.serviceName}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex items-center justify-end space-x-2">
+                                      <button
+                                        onClick={() => handleEditProvider(provider)}
+                                        className="text-blue-600 hover:text-blue-900 inline-flex items-center"
+                                        title="Edit Provider"
+                                      >
+                                        <Edit className="h-4 w-4 mr-1" /> Edit
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteClick(provider.username, 'provider', provider.providerName)}
+                                        className="text-red-600 hover:text-red-900 inline-flex items-center"
+                                        title="Delete Provider"
+                                      >
+                                        <Trash2 className="h-4 w-4 mr-1" /> Delete
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
                         </div>
                       )
                     )}
@@ -944,7 +958,7 @@ const AdminDashboard: React.FC = () => {
                               {foundService.serviceName}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              {foundService.noOfUser}
+                              {foundService.noOfProviders}
                             </td>
                           </tr>
                         </tbody>
@@ -982,7 +996,7 @@ const AdminDashboard: React.FC = () => {
                                     {service.serviceName}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap">
-                                    {service.noOfUser}
+                                    {service.noOfProviders}
                                   </td>
                                 </tr>
                               ))}
