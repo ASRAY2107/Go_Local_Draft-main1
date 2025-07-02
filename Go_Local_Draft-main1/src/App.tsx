@@ -7,22 +7,25 @@ import Layout from "./components/Layout";
 
 // Pages
 import Home from "./pages/Home";
-import Services from "./pages/Services";
+import ServicePage from "./pages/ServicePage";
 import About from "./pages/About";
 import Login from "./pages/Login";
 import SearchResults from "./pages/SearchResults";
 import ServiceProvider from "./pages/ServiceProvider";
 import SignupCustomer from "./pages/SignupCustomer";
-import SignupHelper from "./pages/SignupHelper";
+
 
 // Dashboards
 import CustomerDashboard from "./pages/CustomerDashboard";
 // import ProviderDashboard from "./pages/ProviderDashboard";
-import ProviderDashboard from "./pages/ProviderDashboard";
+import  ProviderDashboard  from "./pages/ProviderDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 
 // Legacy Dashboard (for backward compatibility)
 import Dashboard from "./pages/Dashboard";
+import SignupProvider from "./pages/SignupProvider";
+import ServiceDetailPage from "./pages/ServiceDetailPage";
+import BookServiceForm from "./components/CustomerDashboard/BookServiceForm";
 
 function App() {
   return (
@@ -33,12 +36,14 @@ function App() {
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Home />} />
-              <Route path="/services" element={<Services />} />
-              <Route path="/services/:category" element={<Services />} />
+              <Route index element={<Home />} />
+              <Route path="/services" element={<ServicePage />} />
+              <Route path="/services/:serviceId" element={<ServiceDetailPage />} />
+              <Route path="/book-service/:serviceId" element={<BookServiceForm />} />
               <Route path="/about" element={<About />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup/customer" element={<SignupCustomer />} />
-              <Route path="/signup/helper" element={<SignupHelper />} />
+              <Route path="/signup/provider" element={<SignupProvider />} />
               <Route path="/search" element={<SearchResults />} />
               <Route path="/provider/:id" element={<ServiceProvider />} />
 

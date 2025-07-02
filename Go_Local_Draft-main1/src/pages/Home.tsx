@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+// src/pages/Home.tsx
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   Wrench,
@@ -17,57 +18,35 @@ import {
   MapPin,
   ChevronRight,
   Sparkles,
-  Target,
+  Target, // Not used but was in your original import
   Globe,
 } from "lucide-react";
 import PremiumSearchBar from "../components/PremiumSearchBar";
+// import { useAuth, LoadingSpinner } from "../contexts/AuthContext";
+// import ErrorMessage from "../components/Common/ErrorMessage";
+
+// Import the ServicePage component
+import ServicePage from "./ServicePage"; // Adjust path based on your file structure
+
+// Service interface is now only needed by ServicePage itself
+// Unless Home component explicitly needs to deal with service types for other sections,
+// you can remove it from here. I'll keep it commented out for clarity.
+// interface Service {
+//   id: string;
+//   name: string;
+//   description: string;
+//   imageUrl?: string;
+// }
 
 const Home: React.FC = () => {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
 
-  const services = [
-    {
-      icon: Wrench,
-      title: "Home Repairs",
-      description: "Professional repair and maintenance services for your home",
-      color: "from-blue-500 to-cyan-500",
-      count: "2,500+ providers",
-      rating: 4.8,
-      image:
-        "https://images.pexels.com/photos/5691656/pexels-photo-5691656.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-    {
-      icon: HomeIcon,
-      title: "Cleaning Services",
-      description: "House cleaning and organizing services by experts",
-      color: "from-green-500 to-emerald-500",
-      count: "1,800+ providers",
-      rating: 4.9,
-      image:
-        "https://images.pexels.com/photos/5025639/pexels-photo-5025639.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-    {
-      icon: Car,
-      title: "Automotive",
-      description: "Car repair and maintenance services at your doorstep",
-      color: "from-orange-500 to-red-500",
-      count: "900+ providers",
-      rating: 4.7,
-      image:
-        "https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-    {
-      icon: Paintbrush,
-      title: "Beauty & Wellness",
-      description: "Personal care and wellness services for your wellbeing",
-      color: "from-purple-500 to-pink-500",
-      count: "1,200+ providers",
-      rating: 4.8,
-      image:
-        "https://images.pexels.com/photos/3184454/pexels-photo-3184454.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-  ];
+  // You no longer need to fetch backendServices directly in Home if ServicePage handles it.
+  // const { getAllServices } = useAuth(); // No longer directly used here for service fetching
+  // const [backendServices, setBackendServices] = useState<Service[]>([]); // No longer needed
+  // const [servicesLoading, setServicesLoading] = useState(true); // No longer needed
+  // const [servicesError, setServicesError] = useState<string | null>(null); // No longer needed
 
   const testimonials = [
     {
@@ -161,15 +140,26 @@ const Home: React.FC = () => {
     },
   ];
 
+  // Remove the fetchBackendServices useCallback as ServicePage will handle its own fetching.
+  // const fetchBackendServices = useCallback(async () => { /* ... */ }, [getAllServices]);
+
   useEffect(() => {
     setIsVisible(true);
+    // Removed fetchBackendServices() call from here
 
     const interval = setInterval(() => {
       setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
     }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [testimonials.length]); // Dependencies adjusted
+
+  // Removed getServiceIcon, getServiceColor, getServiceImage helpers
+  // as ServicePage will handle its own rendering logic now.
+
+  // Removed loading and error checks for services here, as ServicePage will handle them internally.
+  // if (servicesLoading) { /* ... */ }
+  // if (servicesError) { /* ... */ }
 
   return (
     <div className="min-h-screen">
@@ -195,7 +185,9 @@ const Home: React.FC = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div
-              className={`transition-all duration-1000 ${isVisible ? "animate-slide-down" : "opacity-0"}`}
+              className={`transition-all duration-1000 ${
+                isVisible ? "animate-slide-down" : "opacity-0"
+              }`}
             >
               <h1 className="text-6xl md:text-8xl font-bold mb-8 leading-tight">
                 Find Local
@@ -213,17 +205,21 @@ const Home: React.FC = () => {
 
             {/* Premium Search Bar */}
             <div
-              className={`mb-16 transition-all duration-1000 delay-300 relative z-[50] ${isVisible ? "animate-slide-up" : "opacity-0"}`}
+              className={`mb-16 transition-all duration-1000 delay-300 relative z-[50] ${
+                isVisible ? "animate-slide-up" : "opacity-0"
+              }`}
             >
               <PremiumSearchBar />
             </div>
 
             {/* Action Buttons */}
             <div
-              className={`flex flex-col sm:flex-row gap-6 justify-center transition-all duration-1000 delay-500 ${isVisible ? "animate-zoom-in" : "opacity-0"}`}
+              className={`flex flex-col sm:flex-row gap-6 justify-center transition-all duration-1000 delay-500 ${
+                isVisible ? "animate-zoom-in" : "opacity-0"
+              }`}
             >
               <Link
-                to="/signup/customer"
+                to="/services"
                 className="group bg-white text-gray-900 px-10 py-5 rounded-2xl font-bold text-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-premium flex items-center justify-center"
               >
                 Find Services
@@ -276,84 +272,19 @@ const Home: React.FC = () => {
                 <div className="text-4xl font-bold text-gray-900 mb-2">
                   {stat.value}
                 </div>
-                <div className="text-gray-600 font-semibold">{stat.label}</div>
+                <div className="text-gray-600 font-semibold">
+                  {stat.label}
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Services Section */}
+      {/* Services Section - Directly render the ServicePage component here */}
+      {/* This will make the entire ServicePage appear within the Home page */}
       <section className="py-24 bg-gradient-to-br from-gray-50 to-blue-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-20">
-            <div className="inline-flex items-center bg-blue-100 text-blue-600 rounded-full px-6 py-3 mb-6">
-              <TrendingUp className="h-5 w-5 mr-2" />
-              <span className="font-semibold">Most Popular</span>
-            </div>
-
-            <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-              Premium Services
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Discover the most requested services in your area and connect with
-              top-rated professionals
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {services.map((service, index) => (
-              <Link
-                key={index}
-                to={`/services/${service.title.toLowerCase().replace(" ", "-")}`}
-                className="group card-premium rounded-3xl overflow-hidden hover-lift"
-              >
-                <div className="relative">
-                  <img
-                    src={service.image}
-                    alt={service.title}
-                    className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-t ${service.color} opacity-80`}
-                  ></div>
-
-                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1">
-                    <div className="flex items-center">
-                      <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                      <span className="text-sm font-bold">
-                        {service.rating}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="absolute bottom-4 left-4">
-                    <service.icon className="h-12 w-12 text-white mb-2" />
-                  </div>
-                </div>
-
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                    {service.title}
-                  </h3>
-                  <p className="text-gray-600 mb-4 leading-relaxed">
-                    {service.description}
-                  </p>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500 font-medium">
-                      {service.count}
-                    </span>
-                    <div className="flex items-center text-blue-600 font-semibold group-hover:text-blue-700">
-                      Explore
-                      <ChevronRight className="h-4 w-4 ml-1 transform group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
+        <ServicePage />
       </section>
 
       {/* Features Section */}
@@ -414,7 +345,7 @@ const Home: React.FC = () => {
                       key={i}
                       className="h-8 w-8 text-yellow-400 fill-current"
                     />
-                  ),
+                  )
                 )}
               </div>
 
@@ -479,7 +410,7 @@ const Home: React.FC = () => {
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12">
             <Link
-              to="/signup/customer"
+              to="/services"
               className="group bg-white text-gray-900 px-10 py-5 rounded-2xl font-bold text-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-premium flex items-center justify-center"
             >
               Find Local Services

@@ -2,9 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { User, MapPin, Phone, Mail, Star, Briefcase, TrendingUp, CheckCircle, Edit, Save, XCircle, AlertTriangle } from 'lucide-react';
-
+ 
 const API_BASE_URL = 'http://localhost:8080/api'; // Your backend base URL
-
+ 
 interface Provider {
     username: string;
     providerName: string;
@@ -22,18 +22,18 @@ interface Provider {
     noOfBookings: number;
     noOfTimesBooked: number;
 }
-
+ 
 const ProviderProfileInfo: React.FC = () => {
     const [providerData, setProviderData] = useState<Provider | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const username = localStorage.getItem('username');
-
+ 
     const [isEditing, setIsEditing] = useState(false);
     const [editedFormData, setEditedFormData] = useState<Partial<Provider>>({});
     const [profilePictureFile, setProfilePictureFile] = useState<File | null>(null);
-
+ 
     useEffect(() => {
         const fetchProviderData = async () => {
             if (!username) {
@@ -41,7 +41,7 @@ const ProviderProfileInfo: React.FC = () => {
                 setLoading(false);
                 return;
             }
-
+ 
             setLoading(true);
             setError(null);
             setSuccessMessage(null);
@@ -74,10 +74,10 @@ const ProviderProfileInfo: React.FC = () => {
                 setLoading(false);
             }
         };
-
+ 
         fetchProviderData();
     }, [username]);
-
+ 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setEditedFormData(prev => ({
@@ -87,20 +87,20 @@ const ProviderProfileInfo: React.FC = () => {
         setError(null);
         setSuccessMessage(null);
     };
-
+ 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files ? e.target.files[0] : null;
         setProfilePictureFile(file);
         setError(null);
         setSuccessMessage(null);
     };
-
+ 
     const handleSaveProfile = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
         setSuccessMessage(null);
-
+ 
         if (
             !editedFormData.providerName ||
             !editedFormData.location ||
@@ -114,16 +114,16 @@ const ProviderProfileInfo: React.FC = () => {
             setLoading(false);
             return;
         }
-
+ 
         const mobileNumberPattern = /^[0-9]{10,15}$/;
         if (!mobileNumberPattern.test(editedFormData.mobileNumber)) {
             setError("Mobile number must be 10-15 digits long and contain only numbers.");
             setLoading(false);
             return;
         }
-
+ 
         const dataToSend: any = { ...editedFormData };
-
+ 
         try {
             if (profilePictureFile) {
                 const reader = new FileReader();
@@ -145,16 +145,16 @@ const ProviderProfileInfo: React.FC = () => {
             } else {
                 dataToSend.profilePicture = providerData?.profilePicture || null;
             }
-
+ 
             dataToSend.mobileNumber = parseInt(editedFormData.mobileNumber, 10);
             dataToSend.experience = Number(editedFormData.experience);
-
+ 
             dataToSend.service = providerData?.service;
-
+ 
             delete dataToSend.rating;
             delete dataToSend.noOfBookings;
             delete dataToSend.noOfTimesBooked;
-
+ 
             const res = await axios.put(
                 `${API_BASE_URL}/provider/update-provider/${username}`,
                 dataToSend,
@@ -165,7 +165,7 @@ const ProviderProfileInfo: React.FC = () => {
                     },
                 }
             );
-
+ 
             const updatedProviderRes = await axios.get<Provider>(
                 `${API_BASE_URL}/provider/get-profile/${username}`,
                 {
@@ -187,7 +187,7 @@ const ProviderProfileInfo: React.FC = () => {
                 description: updatedProviderRes.data.description,
             });
             setProfilePictureFile(null);
-
+ 
             setSuccessMessage(`Profile updated successfully!`);
             setIsEditing(false);
         } catch (err: any) {
@@ -208,7 +208,7 @@ const ProviderProfileInfo: React.FC = () => {
             setLoading(false);
         }
     };
-
+ 
     const handleCancelEdit = () => {
         setIsEditing(false);
         if (providerData) {
@@ -227,19 +227,19 @@ const ProviderProfileInfo: React.FC = () => {
         setError(null);
         setSuccessMessage(null);
     };
-
+ 
     if (loading && !providerData) {
         return <div className="text-center text-gray-600 p-8">Loading profile...</div>;
     }
-
+ 
     if (error && !providerData) {
         return <div className="text-center text-red-600 p-8 flex items-center justify-center"><AlertTriangle className="inline h-5 w-5 mr-2" />{error}</div>;
     }
-
+ 
     if (!providerData) {
         return <div className="text-center text-gray-600 p-8">No provider data available.</div>;
     }
-
+ 
     return (
         <div className="bg-white rounded-xl p-6 shadow-md space-y-6 max-w-2xl mx-auto">
             <form onSubmit={handleSaveProfile}>
@@ -256,7 +256,7 @@ const ProviderProfileInfo: React.FC = () => {
                         </button>
                     )}
                 </div>
-
+ 
                 {error && (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
                         <AlertTriangle className="inline h-4 w-4 mr-2" />
@@ -269,7 +269,7 @@ const ProviderProfileInfo: React.FC = () => {
                         <span className="block sm:inline">{successMessage}</span>
                     </div>
                 )}
-
+ 
                 <div className="flex items-center space-x-6 mb-6">
                     <img
                         src={
@@ -303,7 +303,7 @@ const ProviderProfileInfo: React.FC = () => {
                         </p>
                     </div>
                 </div>
-
+ 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6 text-gray-700">
                     <div className="flex items-center">
                         <MapPin className="h-5 w-5 mr-2 text-blue-500" />
@@ -389,7 +389,7 @@ const ProviderProfileInfo: React.FC = () => {
                         </div>
                     )}
                 </div>
-
+ 
                 <div className="mt-6">
                     <h4 className="text-lg font-semibold text-gray-900 mb-2">About Me:</h4>
                     <p className="text-gray-700">{isEditing ? (
@@ -403,7 +403,7 @@ const ProviderProfileInfo: React.FC = () => {
                         />
                     ) : providerData.description || 'No description provided.'}</p>
                 </div>
-
+ 
                 {isEditing && (
                     <div className="mt-8 flex justify-end space-x-4">
                         <button
@@ -423,7 +423,7 @@ const ProviderProfileInfo: React.FC = () => {
                     </div>
                 )}
             </form>
-
+ 
             <div className="mt-8 border-t pt-6 border-gray-200">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Key Metrics</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -446,5 +446,5 @@ const ProviderProfileInfo: React.FC = () => {
         </div>
     );
 };
-
+ 
 export default ProviderProfileInfo;

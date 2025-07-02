@@ -10,7 +10,7 @@ import {
   User,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { Users } from "../pages/AdminDashboard";
+//import { Users } from "../pages/AdminDashboard";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -22,7 +22,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logouts, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
 
   const getNavItems = () => {
     const baseItems = [
@@ -187,7 +187,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
                           <button
                             onClick={() => {
-                              logouts();
+                              logout();
                               setShowUserMenu(false);
                               navigate("/");
                             }}
@@ -274,7 +274,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
                     <button
                       onClick={() => {
-                        logouts();
+                        logout();
                         setIsMenuOpen(false);
                         navigate("/");
                       }}

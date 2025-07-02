@@ -6,13 +6,11 @@ import {
   Lock,
   MapPin,
   User,
-  XCircle
+  XCircle,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-
-import axios from "axios";
 
 // Assuming you have a custom hook for authentication
 const Login: React.FC = () => {
@@ -25,27 +23,30 @@ const Login: React.FC = () => {
     password: "",
   });
 
-  const { login, loading, isAuthenticated } = useAuth();
+  const { login, loading, isAuthenticated, user } = useAuth(); // Destructure 'user' to get role, and 'setUser' to update the user context directly if needed.
   const navigate = useNavigate();
   const location = useLocation();
-  const from =  "/login";
-  const[isVisible , setIsVisible] = useState(false);
-  const[currentTestimonial , setCurrentTestimonial] = useState(0);
-  const {setUser} = useAuth();
-
+  const from = location.state?.from?.pathname || "/"; // Correctly set 'from' to redirect to the previous page or home
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate(from, { replace: true });
+    // If authenticated, redirect based on role or to the 'from' location
+    if (isAuthenticated && user) {
+      if (user.role === "ROLE_ADMIN") {
+        navigate("/admin-dashboard", { replace: true });
+      } else if (user.role === "ROLE_PROVIDER") {
+        navigate("/provider-dashboard", { replace: true });
+      } else if (user.role === "ROLE_CUSTOMER") {
+        navigate("/customer-dashboard", { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
     }
-  }, [isAuthenticated, navigate, from]);
+  }, [isAuthenticated, navigate, from, user]); // Add user to dependency array
 
-  
-const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const { name, value } = e.target;
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    };
-  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,62 +57,34 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       setError("Please fill in all fields");
       return;
     }
-    
+
     try {
       if (activeTab === "signin") {
-        const response = await axios.post("http://localhost:8080/api/auth/login", {
-          username: formData.username,
-          password: formData.password,
-        });
-        console.log(response);
+        // Use the login function from AuthContext
+        const successLogin = await login(formData.username, formData.password);
 
-        localStorage.setItem("token", response.data.accessToken);
-
-        const token = response.data.accessToken;
-        const role = response.data.role; // Assuming the role is returned in the response
-
-
-        // const token = localStorage.getItem("token");
-        
-        console.log("Token: ",token);
-        const res = await axios.get('http://localhost:8080/api/auth/me', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        localStorage.setItem("username", res.data);
-
-
-        setUser(res.data);
-        
-        if (token !== '') {
+        if (successLogin) {
           setSuccess("Login successful! Redirecting...");
-            if (role == "ROLE_ADMIN") {
-              navigate("/admin-dashboard");
-            } else if (role == "ROLE_PROVIDER") {
-              navigate("/provider-dashboard")
-            } else if (role == "ROLE_CUSTOMER") {
-              navigate("/customer-dashboard")
-            } else {
-              navigate(from);
-            }
+          // The useEffect will handle the navigation based on the updated isAuthenticated and user state.
         } else {
           setError("Invalid username or password");
         }
       } else {
         // For demo - redirect to appropriate signup page
-        if (formData.username) {
-          navigate("/signup/helper");
-        } else {
-          navigate("/signup/customer");
-        }
+        // The original logic for signup tab seemed to rely on username presence for helper signup.
+        // It's usually better to have explicit buttons or clearer paths for different signup types.
+        // For now, keeping the original conditional navigation for signup.
+        // if (formData.username) {
+        //   navigate("/signup/helper");
+        // } else {
+        //   navigate("/signup/customer");
+        // }
       }
     } catch (err) {
+      console.error("Login component handleSubmit error:", err);
       setError("An error occurred. Please try again.");
     }
   };
-  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -315,7 +288,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                   Sign Up as Customer
                 </Link>
                 <Link
-                  to="/signup/helper"
+                  to="/signup/provider"
                   className="block w-full bg-purple-600 text-white py-3 px-4 rounded-xl font-semibold hover:bg-purple-700 transition-all duration-300 transform hover:scale-105 text-center"
                 >
                   Sign Up as Service Provider

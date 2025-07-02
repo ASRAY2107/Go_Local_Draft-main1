@@ -3,21 +3,21 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { User, Calendar, Award, LayoutDashboard } from 'lucide-react'; // LogOut is no longer needed
-
+ 
 // Import the tab content components
 import ProviderProfileInfo from '../components/ProviderProfileInfo';
 import ProviderBookingRequests from '../components/ProviderBookingRequests';
-
+ 
 const API_BASE_URL = 'http://localhost:8080/api'; // Your backend base URL
-
+ 
 // Define the possible tabs
 type DashboardTab = 'profileInfo' | 'bookingRequests' | 'ratingCustomers';
-
+ 
 const ProviderDashboard: React.FC = () => {
     // State for managing active tab
     const [activeTab, setActiveTab] = useState<DashboardTab>('profileInfo'); // Default to 'profileInfo'
     const navigate = useNavigate();
-
+ 
     // Basic authentication check
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -26,7 +26,7 @@ const ProviderDashboard: React.FC = () => {
             navigate('/auth'); // Redirect to login if not authenticated or not a provider
         }
     }, [navigate]);
-
+ 
     // handleLogout function is no longer needed as the logout button is removed
     /*
     const handleLogout = async () => {
@@ -44,13 +44,13 @@ const ProviderDashboard: React.FC = () => {
         }
     };
     */
-
+ 
     const username = localStorage.getItem('username'); // Get username for display
-
+ 
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
             {/* Removed the entire <header> section including GoLocal branding, nav links, and logout */}
-
+ 
             {/* Provider Dashboard Title & System Access - This is now the first element */}
             <div className="container mx-auto p-4 pt-8">
                 <div className="bg-white rounded-xl shadow-md p-6 mb-6">
@@ -69,7 +69,7 @@ const ProviderDashboard: React.FC = () => {
                         </span>
                     </div>
                 </div>
-
+ 
                 {/* Sub-Tabs for Provider Dashboard content (Profile, Bookings, Ratings) */}
                 <div className="bg-white rounded-xl shadow-md p-4 mb-6 flex justify-start items-center space-x-6 overflow-x-auto">
                     <button
@@ -101,7 +101,7 @@ const ProviderDashboard: React.FC = () => {
                     </button>
                 </div>
             </div>
-
+ 
             {/* Main Content Area - Renders the active tab's component */}
             <main className="container mx-auto p-4 flex-grow">
                 {activeTab === 'profileInfo' && <ProviderProfileInfo />}
@@ -125,7 +125,7 @@ const ProviderDashboard: React.FC = () => {
                     </div>
                 )}
             </main>
-
+ 
             {/* Footer (Optional) - Consistent with the general aesthetic */}
             <footer className="bg-white text-gray-600 text-center p-4 mt-auto shadow-inner border-t border-gray-200">
                 <p>&copy; {new Date().getFullYear()} GoLocal Services. All rights reserved.</p>
@@ -133,5 +133,5 @@ const ProviderDashboard: React.FC = () => {
         </div>
     );
 };
-
+ 
 export default ProviderDashboard;
